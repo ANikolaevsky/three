@@ -115,12 +115,21 @@ controls.screenSpacePanning = false
 
 const textureLoader = new THREE.TextureLoader()
 
-const metallMaterial = new THREE.MeshStandardMaterial({ 
-    map: textureLoader.load('./img/MetalGalvanizedSteelWorn001_COL_8K_METALNESS.jpg'), // Базовое изображение текстуры
+// UV у моделей в сантиметрах (от -70 до 70), а не 0..1, поэтому нужен повтор и масштаб
+const loadTexture = (path, isColor = false, scale = .01) => {
+    const tex = textureLoader.load(path)
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping // Без этого за пределами 0..1 растягивается крайний пиксель
+    tex.repeat.set(scale, scale) // Одна плитка текстуры на 1 / scale единиц UV
+    if (isColor) tex.colorSpace = THREE.SRGBColorSpace // Цветовые карты в sRGB, остальные — линейные
+    return tex
+}
+
+const metallMaterial = new THREE.MeshStandardMaterial({
+    map: loadTexture('./img/MetalGalvanizedSteelWorn001_COL_8K_METALNESS.jpg', true), // Базовое изображение текстуры
     // aoMap: textureLoader.load('./img/Poliigon_AmbientOcclusion.jpg'), // Карта теней
-    roughnessMap: textureLoader.load('./img/MetalGalvanizedSteelWorn001_ROUGHNESS_8K_METALNESS.jpg'), // Карта шероховатостей
-    metalnessMap: textureLoader.load('./img/MetalGalvanizedSteelWorn001_METALNESS_8K_METALNESS.jpg'), // Металл или диэлектрик
-    normalMap: textureLoader.load('./img/MetalGalvanizedSteelWorn001_NRM_8K_METALNESS.jpg'), // Карта нормалей
+    roughnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_ROUGHNESS_8K_METALNESS.jpg'), // Карта шероховатостей
+    metalnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_METALNESS_8K_METALNESS.jpg'), // Металл или диэлектрик
+    normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_8K_METALNESS.jpg'), // Карта нормалей
     // displacementMap: textureLoader.load('./img/Poliigon_Displacement.tiff'), // Карта высот
     // displacementScale: 0,
     metalness: 1,
@@ -131,7 +140,7 @@ const metallMaterial = new THREE.MeshStandardMaterial({
 const softMaterial = new THREE.MeshStandardMaterial({ 
     map: textureLoader.load('/img/grey-upholstery_albedo.png'), // Базовое изображение текстуры
     aoMap: textureLoader.load('./img/grey-upholstery_ao.png'), // Карта теней
-    roughnessMap: textureLoader.load('./img/grey-upholstery_roughness.png'), // Карта шероховатостей
+    roughnessMap: textureLoader.load('./img/grey-upholstery_roughness.png.png'), // Карта шероховатостей
     metalnessMap: textureLoader.load('./img/grey-upholstery_metallic.png'), // Металл или диэлектрик
     normalMap: textureLoader.load('./img/grey-upholstery_normal-ogl.png'), // Карта нормалей
     // displacementMap: textureLoader.load('./img/grey-upholstery_height.png'), // Карта высот
@@ -380,7 +389,7 @@ loader.load(
         s3.position.set(-.365, .38, -.19)
         scene.add(s3)
     }
-)
+) 
 
 // Рендер
 
