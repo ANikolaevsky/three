@@ -108,8 +108,8 @@ controls.enableDamping = true // Плавность, инерция
 controls.dampingFactor = .05 // Степень плавности
 controls.screenSpacePanning = false
 // controls.enableZoom = false // Отключение зума
-controls.minDistance = 15
-controls.maxDistance = 15
+// controls.minDistance = 15
+// controls.maxDistance = 15
 
 // Текстуры
 
@@ -131,7 +131,7 @@ const metallMaterial = new THREE.MeshStandardMaterial({
 const softMaterial = new THREE.MeshStandardMaterial({ 
     map: textureLoader.load('/img/grey-upholstery_albedo.png'), // Базовое изображение текстуры
     aoMap: textureLoader.load('./img/grey-upholstery_ao.png'), // Карта теней
-    roughnessMap: textureLoader.load('./img/grey-upholstery_roughness.png.png'), // Карта шероховатостей
+    roughnessMap: textureLoader.load('./img/grey-upholstery_roughness.png'), // Карта шероховатостей
     metalnessMap: textureLoader.load('./img/grey-upholstery_metallic.png'), // Металл или диэлектрик
     normalMap: textureLoader.load('./img/grey-upholstery_normal-ogl.png'), // Карта нормалей
     // displacementMap: textureLoader.load('./img/grey-upholstery_height.png'), // Карта высот
