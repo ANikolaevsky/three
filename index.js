@@ -126,7 +126,7 @@ const loadTexture = (path, isColor = false, scale = .01) => {
 
 const metallMaterial = new THREE.MeshStandardMaterial({
     map: loadTexture('./img/MetalGalvanizedSteelWorn001_COL_8K_METALNESS.jpg', true), // Базовое изображение текстуры
-    // aoMap: textureLoader.load('./img/Poliigon_AmbientOcclusion.jpg'), // Карта теней
+    aoMap: loadTexture('./img/Poliigon_AmbientOcclusion.jpg'), // Карта теней
     roughnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_ROUGHNESS_8K_METALNESS.jpg'), // Карта шероховатостей
     metalnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_METALNESS_8K_METALNESS.jpg'), // Металл или диэлектрик
     normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_8K_METALNESS.jpg'), // Карта нормалей
@@ -138,11 +138,11 @@ const metallMaterial = new THREE.MeshStandardMaterial({
 })
 
 const softMaterial = new THREE.MeshStandardMaterial({ 
-    map: textureLoader.load('/img/grey-upholstery_albedo.png'), // Базовое изображение текстуры
-    aoMap: textureLoader.load('./img/grey-upholstery_ao.png'), // Карта теней
-    roughnessMap: textureLoader.load('./img/grey-upholstery_roughness.png.png'), // Карта шероховатостей
-    metalnessMap: textureLoader.load('./img/grey-upholstery_metallic.png'), // Металл или диэлектрик
-    normalMap: textureLoader.load('./img/grey-upholstery_normal-ogl.png'), // Карта нормалей
+    map: loadTexture('/img/grey-upholstery_albedo.png', true), // Базовое изображение текстуры
+    aoMap: loadTexture('./img/grey-upholstery_ao.png'), // Карта теней
+    roughnessMap: loadTexture('./img/grey-upholstery_roughness.png'), // Карта шероховатостей
+    metalnessMap: loadTexture('./img/grey-upholstery_metallic.png'), // Металл или диэлектрик
+    normalMap: loadTexture('./img/grey-upholstery_normal-ogl.png'), // Карта нормалей
     // displacementMap: textureLoader.load('./img/grey-upholstery_height.png'), // Карта высот
     // displacementScale: 0
 })
@@ -169,7 +169,7 @@ cube.position.copy(tempVector) // Пример применения коорди
 cube.castShadow = true // Отбрасывание теней
 cube.receiveShadow = true // Принятие теней
 cube.updateMatrix() // Обновление матрицы преобразования объектов вручную
-scene.add(cube)
+// scene.add(cube)
 
 // const wireCube = new THREE.Mesh(geometry, material)
 // wireCube.scale.setScalar(1.01)
