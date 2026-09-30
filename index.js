@@ -23,7 +23,7 @@ const config = {
     },
     lighting: {
         ambientIntensity: .4,
-        directionalIntensity: 3,
+        directionalIntensity: 4,
         directionalPosition: [ 5, 10, 7 ]
     },
     camera: {
@@ -53,7 +53,7 @@ const canvas = document.querySelector('canvas');
 const ambientLight = new THREE.AmbientLight('white', 0.5) // Равномерный фоновый свет
 // scene.add(ambientLight)
 
-const dirLight = new THREE.DirectionalLight('rgb(246, 244, 238)', config.lighting.directionalIntensity)
+const dirLight = new THREE.DirectionalLight('rgb(252, 250, 243)', config.lighting.directionalIntensity)
 dirLight.position.set(0, 6, 0)
 // dirLight.castShadow = true // Включает отбрасывание тени от этого источника
 // dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024) // Разрешение теней (512, 1024, 2048)
@@ -77,10 +77,10 @@ scene.add(pointLight)
 const pointLightHelper = new THREE.PointLightHelper(pointLight, .1)
 scene.add(pointLightHelper)
 
-const pointLight2 = new THREE.PointLight('rgb(170, 203, 246)', 5, 5)
-pointLight2.position.set(-1, -1, -1)
-pointLight2.castShadow = true
-// scene.add(pointLight2)
+const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 8, 10)
+pointLight2.position.set(-2, 1, -2)
+// pointLight2.castShadow = true
+scene.add(pointLight2)
 
 const pointLightHelper2 = new THREE.PointLightHelper(pointLight2, .1)
 scene.add(pointLightHelper2)
@@ -108,8 +108,8 @@ controls.enableDamping = true // Плавность, инерция
 controls.dampingFactor = .05 // Степень плавности
 controls.screenSpacePanning = false
 // controls.enableZoom = false // Отключение зума
-// controls.minDistance = 15
-// controls.maxDistance = 15
+controls.minDistance = 15
+controls.maxDistance = 15
 
 // Текстуры
 
@@ -125,26 +125,26 @@ const loadTexture = (path, isColor = false, scale = .01) => {
 }
 
 const metallMaterial = new THREE.MeshStandardMaterial({
-    map: loadTexture('./img/MetalGalvanizedSteelWorn001_COL_8K_METALNESS.jpg', true), // Базовое изображение текстуры
-    aoMap: loadTexture('./img/Poliigon_AmbientOcclusion.jpg'), // Карта теней
-    roughnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_ROUGHNESS_8K_METALNESS.jpg'), // Карта шероховатостей
-    metalnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_METALNESS_8K_METALNESS.jpg'), // Металл или диэлектрик
-    normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_8K_METALNESS.jpg'), // Карта нормалей
+    map: loadTexture('./img/MetalGalvanizedSteelWorn001_COL_2K_METALNESS.jpg', true), // Базовое изображение текстуры
+    // aoMap: loadTexture('./img/Poliigon_MetalGalvanizedZinc_7184_AmbientOcclusion.jpg'), // Карта теней
+    roughnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_ROUGHNESS_2K_METALNESS.jpg'), // Карта шероховатостей
+    metalnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_METALNESS_2K_METALNESS.jpg'), // Металл или диэлектрик
+    normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_2K_METALNESS.jpg'), // Карта нормалей
     // displacementMap: textureLoader.load('./img/Poliigon_Displacement.tiff'), // Карта высот
     // displacementScale: 0,
-    metalness: 1,
-    roughness: .5,
-    // emissive: 'rgb(89, 89, 89)' // Излучение
+    metalness: .2,
+    roughness: 1,
+    // emissive: 'rgb(167, 167, 167)' // Излучение
 })
 
 const softMaterial = new THREE.MeshStandardMaterial({ 
-    map: loadTexture('/img/grey-upholstery_albedo.png', true), // Базовое изображение текстуры
-    aoMap: loadTexture('./img/grey-upholstery_ao.png'), // Карта теней
-    roughnessMap: loadTexture('./img/grey-upholstery_roughness.png'), // Карта шероховатостей
-    metalnessMap: loadTexture('./img/grey-upholstery_metallic.png'), // Металл или диэлектрик
-    normalMap: loadTexture('./img/grey-upholstery_normal-ogl.png'), // Карта нормалей
-    // displacementMap: textureLoader.load('./img/grey-upholstery_height.png'), // Карта высот
-    // displacementScale: 0
+    map: loadTexture('/img/rough-fabric_albedo.png', true), // Базовое изображение текстуры
+    aoMap: loadTexture('./img/rough-fabric_ao.png'), // Карта теней
+    roughnessMap: loadTexture('./img/rough-fabric_roughness.png'), // Карта шероховатостей
+    metalnessMap: loadTexture('./img/rough-fabric_metallic.png'), // Металл или диэлектрик
+    normalMap: loadTexture('./img/rough-fabric_normal-ogl.png'), // Карта нормалей
+    displacementMap: loadTexture('./img/rough-fabric_height.png'), // Карта высот
+    displacementScale: 0
 })
 
 // Куб
@@ -217,11 +217,9 @@ loader.load(
         mr = gltf.scene // Загружаем геометрию
         mr.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = metallMaterial,
-                node.castShadow = true,
-                node.receiveShadow = true,
-                node.material.metalness = 0,
-                node.material.roughness = 1
+                node.material = metallMaterial
+                // node.castShadow = true
+                // node.receiveShadow = true
             }
         })
         mr.scale.setScalar(.01) // Сразу во все направления
@@ -451,12 +449,12 @@ window.addEventListener('resize', () => {
     controls.update()
     config.sizes.height = window.innerHeight // Обновляем соотношение сторон при каждом изменении окна
     config.sizes.width = window.innerWidth / 2
-
+    
     camera.aspect = sizes.width / sizes.height // Обновление соотношения сторон
     camera.updateProjectionMatrix() // Обновление матрицы экрана
+
     renderer.setSize(sizes.width, sizes.height) //  Обновление рендерера с новыми сторонами
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    
 })
 
 // Полноэкранный режим канваса
