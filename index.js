@@ -23,8 +23,7 @@ const config = {
     },
     lighting: {
         ambientIntensity: .4,
-        directionalIntensity: 4,
-        directionalPosition: [ 5, 10, 7 ]
+        directionalIntensity: 5
     },
     camera: {
         fov: 14,
@@ -54,9 +53,11 @@ const ambientLight = new THREE.AmbientLight('white', 0.5) // Равномерн�
 // scene.add(ambientLight)
 
 const dirLight = new THREE.DirectionalLight('rgb(252, 250, 243)', config.lighting.directionalIntensity)
-dirLight.position.set(0, 6, 0)
-// dirLight.castShadow = true // Включает отбрасывание тени от этого источника
-// dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024) // Разрешение теней (512, 1024, 2048)
+dirLight.position.set(1, 6, 1)
+dirLight.castShadow = true // Включает отбрасывание тени от этого источника
+dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024) // Разрешение теней (512, 1024, 2048)
+dirLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
+dirLight.shadow.radius = 0
 scene.add(dirLight)
 
 const dirLightHelper = new THREE.DirectionalLightHelper (dirLight, 2)
@@ -67,18 +68,18 @@ const hemiLight = new THREE.HemisphereLight(0x0099ff, 0xaa5500)
 
 const pointLight = new THREE.PointLight('rgb(238, 238, 236)', 8, 10)
 pointLight.position.set(1, 2, 1)
-pointLight.castShadow = true
-pointLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
-pointLight.shadow.camera.far = 10 // Макс расстояние отбрасывания теней
-pointLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
-pointLight.shadow.radius = 1 // Мягкость теней
+// pointLight.castShadow = true
+// pointLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
+// pointLight.shadow.camera.far = 10 // Макс расстояние отбрасывания теней
+// pointLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
+// pointLight.shadow.radius = 1 // Мягкость теней
 scene.add(pointLight)
 
 const pointLightHelper = new THREE.PointLightHelper(pointLight, .1)
 scene.add(pointLightHelper)
 
-const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 8, 10)
-pointLight2.position.set(-2, 1, -2)
+const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 4, 10)
+pointLight2.position.set(-1, 1, -1)
 // pointLight2.castShadow = true
 scene.add(pointLight2)
 
@@ -132,7 +133,7 @@ const metallMaterial = new THREE.MeshStandardMaterial({
     normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_2K_METALNESS.jpg'), // Карта нормалей
     // displacementMap: textureLoader.load('./img/Poliigon_Displacement.tiff'), // Карта высот
     // displacementScale: 0,
-    metalness: .2,
+    metalness: .9,
     roughness: 1,
     // emissive: 'rgb(167, 167, 167)' // Излучение
 })
@@ -152,7 +153,6 @@ const softMaterial = new THREE.MeshStandardMaterial({
 const tempVector = new THREE.Vector3(-1, 0.15, 0) // Если хотим присваивать значение координат много раз
 
 const geometry = new THREE.BoxGeometry(1, 1, 1) // Геометрия
-
 const material = new THREE.MeshStandardMaterial({ // Базовый, учитывает все характеристики без бликов
     color: 'new THREE.Color(rgb(203, 195, 180)',
     // flatShading: true,
@@ -162,13 +162,13 @@ const material = new THREE.MeshStandardMaterial({ // Базовый, учиты�
 })
 
 const cube = new THREE.Mesh(geometry, metallMaterial)
-cube.scale.set(0.3, 0.3, 1) // Можно и сразу указать данные размеры бокса без скейла
+// cube.scale.set(0.3, 0.3, 1) // Можно и сразу указать данные размеры бокса без скейла
 // cube.rotation.set(Math.PI * 0.15, Math.PI * 0.15, 0) // Угол через ПИ
 // cube.rotation.set(THREE.MathUtils.degToRad(30), THREE.MathUtils.degToRad(30), 0) // В градусах удобнее
-cube.position.copy(tempVector) // Пример применения координат через Vector3
-cube.castShadow = true // Отбрасывание теней
-cube.receiveShadow = true // Принятие теней
-cube.updateMatrix() // Обновление матрицы преобразования объектов вручную
+// cube.position.copy(tempVector) // Пример применения координат через Vector3
+// cube.castShadow = true // Отбрасывание теней
+// cube.receiveShadow = true // Принятие теней
+// cube.updateMatrix() // Обновление матрицы преобразования объектов вручную
 // scene.add(cube)
 
 // const wireCube = new THREE.Mesh(geometry, material)
@@ -178,19 +178,18 @@ cube.updateMatrix() // Обновление матрицы преобразов�
 // Плоскость
 
 const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(2.5, 2.5), 
+    new THREE.PlaneGeometry(2, 2), 
     new THREE.MeshStandardMaterial({
-        color: 'rgb(255, 255, 255)', 
+        color: 'rgb(209, 209, 209)', 
         roughness: 0,
         transparent: true, // Прозрачность. Но тени тоже исчезают..
-        opacity: 1, // Уровень прозрачности
-        metalness: .4
+        opacity: .2 // Уровень прозрачности
     })
 )
 plane.rotation.x = -Math.PI * 0.5
 plane.position.set(0, 0, 0)
 plane.receiveShadow = true
-plane.castShadow = true
+// plane.castShadow = true
 scene.add(plane)
 
 // Группы
