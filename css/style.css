@@ -1,9 +1,36 @@
+@font-face {
+    font-family: 'DINPro';
+    src: url('../fonts/DINPro-Bold.woff') format('woff'),
+         url('../fonts/DINPro-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'DINPro';
+    src: url('../fonts/DINPro-Medium.woff') format('woff'),
+         url('../fonts/DINPro-Medium.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'DINPro';
+    src: url('../fonts/DINPro-Light.woff') format('woff'),
+         url('../fonts/DINPro-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
 
 * {
     margin: 0;
     padding: 0;
     font-family: 'DINPro';
     font-size: 12px;
+    font-weight: 300;
 }
 
 ul {
@@ -24,7 +51,7 @@ html, body {
 .footer-left, .footer-right, .footer-block {
     position: fixed;
     display: flex;
-    bottom: 30px;
+    bottom: 40px;
     z-index: 1;
 }
 
@@ -37,14 +64,14 @@ html, body {
 }
 
 .footer-right {
-    right: 30px;
+    right: 60px;
 }
 
 .buttons {
     display: inline-block;
     float: left;
     padding: 8px 18px;
-    background: rgba(255, 255, 255);
+    background: rgb(255, 255, 255);
     border-radius: 6px;
 }
 
@@ -54,37 +81,28 @@ html, body {
 
 .label {
     padding: 9px 16px 0px 2px;
-    font-size: 12px;
     float: left;
 }
 
 .active {
     padding: 10px 8px;
     background: rgb(240, 240, 240);
-    color: rgb(68, 68, 68);
+    color: rgb(30, 30, 30);
     border: 0px solid #fff;
     border-radius: 2px;
-    font-family: 'DINPro';
-    font-size: 12px;
     cursor: pointer;
     transition: all .25s ease;
     opacity: 1;
     float: left; 
     margin-right: 6px;
-
-    &:hover {
-    background: rgb(240, 240, 240);;
-    }
 }
 
 .button {
     padding: 10px 8px;
     background: rgb(255, 255, 255);
-    color: rgb(68, 68, 68);
+    color: rgb(30, 30, 30);
     border: 0px solid #fff;
     border-radius: 2px;
-    font-family: 'DINPro';
-    font-size: 12px;
     cursor: pointer;
     transition: all .25s ease;
     opacity: 1;
@@ -95,6 +113,6 @@ html, body {
     }
 
     &:hover {
-    background: rgb(240, 240, 240);;
+    background: rgb(240, 240, 240);
     }
 }

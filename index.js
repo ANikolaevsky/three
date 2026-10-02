@@ -8,6 +8,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { materialLightMap, metalness, roughness, texture } from 'three/tsl'
 import { Pane } from 'tweakpane'
 import Stats from 'three/addons/libs/stats.module.js'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 
 const stats = new Stats() // FPS
 // document.body.appendChild(stats.dom)
@@ -18,18 +19,18 @@ const devMode = false
 
 const config = {
     shadows: {
-        resolution: 2048,
+        resolution: 2048, // Разрешение теней (512, 1024, 2048)
         normalBias: .05,
     },
     lighting: {
         ambientIntensity: .4,
-        directionalIntensity: 5
+        directionalIntensity: 7
     },
     camera: {
         fov: 14,
         position: [ 0, 0, 0 ],
-        near: .1,
-        far: 1000
+        near: 1,
+        far: 10
     },
     materials: {
         roughness: .4,
@@ -55,9 +56,9 @@ const ambientLight = new THREE.AmbientLight('white', 0.5) // Равномерн�
 const dirLight = new THREE.DirectionalLight('rgb(252, 250, 243)', config.lighting.directionalIntensity)
 dirLight.position.set(1, 6, 1)
 dirLight.castShadow = true // Включает отбрасывание тени от этого источника
-dirLight.shadow.mapSize = new THREE.Vector2(1024, 1024) // Разрешение теней (512, 1024, 2048)
+dirLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
 dirLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
-dirLight.shadow.radius = 0
+dirLight.shadow.radius = 1
 scene.add(dirLight)
 
 const dirLightHelper = new THREE.DirectionalLightHelper (dirLight, 2)
@@ -66,8 +67,8 @@ scene.add(dirLightHelper)
 const hemiLight = new THREE.HemisphereLight(0x0099ff, 0xaa5500)
 // scene.add(hemiLight)
 
-const pointLight = new THREE.PointLight('rgb(238, 238, 236)', 8, 10)
-pointLight.position.set(1, 2, 1)
+const pointLight = new THREE.PointLight('rgb(238, 238, 236)', 10, 10)
+pointLight.position.set(2, 1, 2)
 // pointLight.castShadow = true
 // pointLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
 // pointLight.shadow.camera.far = 10 // Макс расстояние отбрасывания теней
@@ -78,8 +79,8 @@ scene.add(pointLight)
 const pointLightHelper = new THREE.PointLightHelper(pointLight, .1)
 scene.add(pointLightHelper)
 
-const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 4, 10)
-pointLight2.position.set(-1, 1, -1)
+const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 15, 10)
+pointLight2.position.set(-2, .5, -2)
 // pointLight2.castShadow = true
 scene.add(pointLight2)
 
@@ -121,6 +122,7 @@ const loadTexture = (path, isColor = false, scale = .01) => {
     const tex = textureLoader.load(path)
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping // Без этого за пределами 0..1 растягивается крайний пиксель
     tex.repeat.set(scale, scale) // Одна плитка текстуры на 1 / scale единиц UV
+    tex.anisotropy = 8
     if (isColor) tex.colorSpace = THREE.SRGBColorSpace // Цветовые карты в sRGB, остальные — линейные
     return tex
 }
@@ -131,7 +133,7 @@ const metallMaterial = new THREE.MeshStandardMaterial({
     roughnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_ROUGHNESS_2K_METALNESS.jpg'), // Карта шероховатостей
     metalnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_METALNESS_2K_METALNESS.jpg'), // Металл или диэлектрик
     normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_2K_METALNESS.jpg'), // Карта нормалей
-    // displacementMap: textureLoader.load('./img/Poliigon_Displacement.tiff'), // Карта высот
+    // displacementMap: loadTexture('./img/Poliigon_Displacement.tiff'), // Карта высот
     // displacementScale: 0,
     metalness: .9,
     roughness: 1,
@@ -178,12 +180,9 @@ const cube = new THREE.Mesh(geometry, metallMaterial)
 // Плоскость
 
 const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(2, 2), 
-    new THREE.MeshStandardMaterial({
-        color: 'rgb(209, 209, 209)', 
-        roughness: 0,
-        transparent: true, // Прозрачность. Но тени тоже исчезают..
-        opacity: .2 // Уровень прозрачности
+    new THREE.PlaneGeometry(20, 20), // Размер должен покрывать область, где падают тени
+    new THREE.ShadowMaterial({
+        opacity: .2 // Плоскость невидима, виден только сам оттенок тени
     })
 )
 plane.rotation.x = -Math.PI * 0.5
@@ -403,8 +402,8 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  
 renderer.outputColorSpace = THREE.SRGBColorSpace // Улучшенное и корректное отображение цветов
-renderer.physicallyCorrectLights = true // Делает свет реалистичнее
 // renderer.toneMapping = THREE.LinearToneMapping // Улучшение переходов и теней
+renderer.toneMapping = THREE.ACESFilmicToneMapping // Супер классный ToneMapping
 renderer.shadowMap.enabled = true // Добавление теней в рендеринг!
 // renderer.shadowMap.type = THREE.PCFShadowMap // Алгоритм сжатия теней
 renderer.shadowMap.type = THREE.PCFSoftShadowMap // Чтоб были супер мягкие тени
@@ -442,17 +441,22 @@ function animate() {
 }
 animate()
 
+// Карта окружения
+
+// const pmrem = new THREE.PMREMGenerator(renderer)
+// scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+
 // Резиновый канвас (ресайз)
 
 window.addEventListener('resize', () => {
     controls.update()
     config.sizes.height = window.innerHeight // Обновляем соотношение сторон при каждом изменении окна
-    config.sizes.width = window.innerWidth / 2
+    config.sizes.width = window.innerWidth
     
-    camera.aspect = sizes.width / sizes.height // Обновление соотношения сторон
+    camera.aspect = config.sizes.width / config.sizes.height // Обновление соотношения сторон
     camera.updateProjectionMatrix() // Обновление матрицы экрана
 
-    renderer.setSize(sizes.width, sizes.height) //  Обновление рендерера с новыми сторонами
+    renderer.setSize(config.sizes.width, config.sizes.height) //  Обновление рендерера с новыми сторонами
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
@@ -494,8 +498,26 @@ if (devMode) {
 
 // Buttons
 
-document.querySelectorAll('.button').forEach(button => {
-    button.addEventListener('click', () => {
-        scene.remove(s1)
-    })
+// document.querySelectorAll('.button').forEach(button => {
+//     button.addEventListener('click', () => {
+//         scene.remove(s1)
+//     })
+// })
+
+// Лак / Цинк: переключение metalness и активной кнопки
+
+const zinc = document.getElementById('zinc')
+const lacquer = document.getElementById('lacquer')
+const lacquerMetalness = metallMaterial.metalness
+
+zinc.addEventListener('click', () => {
+    metallMaterial.metalness = .3
+    zinc.className = 'active'
+    lacquer.className = 'button'
+})
+
+lacquer.addEventListener('click', () => {
+    metallMaterial.metalness = lacquerMetalness
+    lacquer.className = 'active'
+    zinc.className = 'button'
 })
