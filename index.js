@@ -20,11 +20,12 @@ const devMode = false
 const config = {
     shadows: {
         resolution: 2048, // Разрешение теней (512, 1024, 2048)
-        normalBias: .05,
+        normalBias: .0001, // Должен быть порядка 2–3 текселей теневой карты, иначе тень «отрывается» от объектов
+        area: 1.5 // Половина размера области, в которой считаются тени
     },
     lighting: {
         ambientIntensity: .4,
-        directionalIntensity: 7
+        directionalIntensity: 8
     },
     camera: {
         fov: 14,
@@ -59,10 +60,21 @@ dirLight.castShadow = true // Включает отбрасывание тени
 dirLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
 dirLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
 dirLight.shadow.radius = 1
+// По умолчанию тени считаются в квадрате 10×10, а сцена ~1.5 м — сужаем, чтобы тень стала детальнее
+dirLight.shadow.camera.left = -config.shadows.area
+dirLight.shadow.camera.right = config.shadows.area
+dirLight.shadow.camera.top = config.shadows.area
+dirLight.shadow.camera.bottom = -config.shadows.area
+dirLight.shadow.camera.near = 1
+dirLight.shadow.camera.far = 10
 scene.add(dirLight)
 
 const dirLightHelper = new THREE.DirectionalLightHelper (dirLight, 2)
 scene.add(dirLightHelper)
+
+const shadowHelper = new THREE.CameraHelper(dirLight.shadow.camera)
+scene.add(shadowHelper)
+
 
 const hemiLight = new THREE.HemisphereLight(0x0099ff, 0xaa5500)
 // scene.add(hemiLight)
@@ -79,8 +91,8 @@ scene.add(pointLight)
 const pointLightHelper = new THREE.PointLightHelper(pointLight, .1)
 scene.add(pointLightHelper)
 
-const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 15, 10)
-pointLight2.position.set(-2, .5, -2)
+const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 15, 100)
+pointLight2.position.set(-1.5, .5, -1.5)
 // pointLight2.castShadow = true
 scene.add(pointLight2)
 
@@ -93,7 +105,7 @@ const camera = new THREE.PerspectiveCamera(
     config.camera.fov, 
     config.sizes.width / config.sizes.height
 )
-camera.position.set(-5, 5, 10)
+camera.position.set(-4, 3.3, 10)
 
 // Оси и сетки
 
@@ -109,9 +121,67 @@ const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true // Плавность, инерция
 controls.dampingFactor = .05 // Степень плавности
 controls.screenSpacePanning = false
-// controls.enableZoom = false // Отключение зума
-controls.minDistance = 15
-controls.maxDistance = 15
+controls.enableZoom = false // Отключение зума
+
+// Блокируем зум страницы браузером
+window.addEventListener('wheel', (event) => {
+    if (event.ctrlKey) event.preventDefault() // Щипок на трекпаде браузер тоже передаёт как wheel с ctrlKey
+}, { passive: false })
+
+// Safari на Mac и iOS шлёт щипок отдельными событиями
+const preventGesture = (event) => event.preventDefault()
+document.addEventListener('gesturestart', preventGesture)
+document.addEventListener('gesturechange', preventGesture)
+document.addEventListener('gestureend', preventGesture)
+
+
+controls.target.set(0, .2, 0) // Чтоб модель была чуть ниже на экране
+
+// Плавный возврат камеры в изначальное положение
+
+// Двигаем камеру не по прямой, а по дуге вокруг цели (сферические координаты):
+// прямая проходит ближе к модели, и камера по пути «наезжала» бы на неё
+const cameraHome = {
+    target: controls.target.clone(),
+    spherical: new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)) // (-4, 3, 10) относительно цели
+}
+const cameraTween = {
+    active: false,
+    duration: 1100, // мс
+    startTime: 0,
+    fromTarget: new THREE.Vector3(),
+    fromSpherical: new THREE.Spherical(),
+    spherical: new THREE.Spherical(), // Промежуточное значение на каждом кадре
+    offset: new THREE.Vector3()
+}
+
+const resetCamera = () => {
+    cameraTween.fromTarget.copy(controls.target)
+    cameraTween.fromSpherical.setFromVector3(cameraTween.offset.copy(camera.position).sub(controls.target))
+    // Поворачиваем по короткой стороне, а не через полный оборот
+    const dTheta = cameraHome.spherical.theta - cameraTween.fromSpherical.theta
+    cameraTween.fromSpherical.theta += Math.round(dTheta / (Math.PI * 2)) * Math.PI * 2
+    cameraTween.startTime = performance.now()
+    cameraTween.active = true
+}
+
+const updateCameraTween = () => {
+    if (!cameraTween.active) return
+    const t = Math.min((performance.now() - cameraTween.startTime) / cameraTween.duration, 1)
+    const eased = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2 // easeInOutCubic: мягко трогается и мягко тормозит
+    const from = cameraTween.fromSpherical
+    const to = cameraHome.spherical
+    cameraTween.spherical.set(
+        THREE.MathUtils.lerp(from.radius, to.radius, eased),
+        THREE.MathUtils.lerp(from.phi, to.phi, eased),
+        THREE.MathUtils.lerp(from.theta, to.theta, eased)
+    )
+    controls.target.lerpVectors(cameraTween.fromTarget, cameraHome.target, eased)
+    camera.position.setFromSpherical(cameraTween.spherical).add(controls.target)
+    if (t === 1) cameraTween.active = false
+}
+
+controls.addEventListener('start', () => { cameraTween.active = false }) // Пользователь схватил камеру — отменяем возврат
 
 // Текстуры
 
@@ -135,9 +205,21 @@ const metallMaterial = new THREE.MeshStandardMaterial({
     normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_2K_METALNESS.jpg'), // Карта нормалей
     // displacementMap: loadTexture('./img/Poliigon_Displacement.tiff'), // Карта высот
     // displacementScale: 0,
-    metalness: .9,
-    roughness: 1,
+    metalness: .5,
+    roughness: .4,
     // emissive: 'rgb(167, 167, 167)' // Излучение
+})
+
+const metallMaterial2 = new THREE.MeshStandardMaterial({
+    map: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_BaseColor.jpg', true), // Базовое изображение текстуры
+    aoMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_AmbientOcclusion.jpg'), // Карта теней
+    roughnessMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Roughness.jpg'), // Карта шероховатостей
+    metalnessMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Metallic.jpg'), // Металл или диэлектрик
+    normalMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Normal.png'), // Карта нормалей
+    // displacementMap: loadTexture('./img/Poliigon_Displacement.tiff'), // Карта высот
+    // displacementScale: 0,
+    metalness: 1,
+    roughness: 1
 })
 
 const softMaterial = new THREE.MeshStandardMaterial({ 
@@ -150,32 +232,17 @@ const softMaterial = new THREE.MeshStandardMaterial({
     displacementScale: 0
 })
 
-// Куб
-
-const tempVector = new THREE.Vector3(-1, 0.15, 0) // Если хотим присваивать значение координат много раз
-
-const geometry = new THREE.BoxGeometry(1, 1, 1) // Геометрия
-const material = new THREE.MeshStandardMaterial({ // Базовый, учитывает все характеристики без бликов
-    color: 'new THREE.Color(rgb(203, 195, 180)',
-    // flatShading: true,
-    emissive: 'rgb(47, 46, 46)',
-    metalness: 1, // Лучше использовать 1 или 0
-    roughness: .2 // Шероховатость поверхности
+const softMaterial2 = new THREE.MeshStandardMaterial({ 
+    map: loadTexture('/img/grey-upholstery_albedo.png', true), // Базовое изображение текстуры
+    aoMap: loadTexture('./img/grey-upholstery_ao.png'), // Карта теней
+    roughnessMap: loadTexture('./img/grey-upholstery_roughness.png'), // Карта шероховатостей
+    metalnessMap: loadTexture('./img/grey-upholstery_metallic.png'), // Металл или диэлектрик
+    normalMap: loadTexture('./img/grey-upholstery_normal-ogl.png'), // Карта нормалей
+    displacementMap: loadTexture('./img/grey-upholstery_height.png'), // Карта высот
+    displacementScale: 0
 })
 
-const cube = new THREE.Mesh(geometry, metallMaterial)
-// cube.scale.set(0.3, 0.3, 1) // Можно и сразу указать данные размеры бокса без скейла
-// cube.rotation.set(Math.PI * 0.15, Math.PI * 0.15, 0) // Угол через ПИ
-// cube.rotation.set(THREE.MathUtils.degToRad(30), THREE.MathUtils.degToRad(30), 0) // В градусах удобнее
-// cube.position.copy(tempVector) // Пример применения координат через Vector3
-// cube.castShadow = true // Отбрасывание теней
-// cube.receiveShadow = true // Принятие теней
-// cube.updateMatrix() // Обновление матрицы преобразования объектов вручную
-// scene.add(cube)
-
-// const wireCube = new THREE.Mesh(geometry, material)
-// wireCube.scale.setScalar(1.01)
-// cube.add(wireCube) // Можно добавлять мэш не в сцену, а в другой мэш!!
+softMaterial2.normalScale.set(.1, .1) // Уменьшение значений неправильной карты нормалей
 
 // Плоскость
 
@@ -191,22 +258,12 @@ plane.receiveShadow = true
 // plane.castShadow = true
 scene.add(plane)
 
-// Группы
-
-// const group = new THREE.Group()
-// const mesh1 = new THREE.Mesh(geometry, material)
-// const mesh2 = new THREE.Mesh(geometry, material)
-// mesh1.position.set(-1.5, 0, 0)
-// mesh2.position.set(1.5, 0, 0)
-// group.add(mesh1, mesh2)
-// group.scale.setSсalar(.5) // Если по всем осям одинаковый скейл
-// group.rotation.x = Math.PI * 0.25
-// group.rotation.y = Math.PI * 0.25
-// scene.add(group)
-
 // Лоадеры
 
 const loader = new GLTFLoader()
+
+let currentMetallMaterial = metallMaterial2 // Металл для подгружаемых моделей, меняется кнопками Лак / Цинк
+let currentSoftMaterial = softMaterial // Ткань подушек, меняется кнопками Бежевые / Серые
 
 let mr = null
 loader.load(
@@ -215,25 +272,64 @@ loader.load(
         mr = gltf.scene // Загружаем геометрию
         mr.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = metallMaterial
-                // node.castShadow = true
-                // node.receiveShadow = true
+                node.material = currentMetallMaterial,
+                node.castShadow = true,
+                node.receiveShadow = true
             }
         })
         mr.scale.setScalar(.01) // Сразу во все направления
         mr.rotation.set(0, THREE.MathUtils.degToRad(180), 0)
         mr.position.set(-.35, 0, .4)
-        scene.add(mr)
+        // scene.add(mr)
     }
 )
 
+let mr2 = null
+loader.load(
+    './models/MR2.glb',
+    (gltf) => { // Коллбек при успешной загрузки
+        mr2 = gltf.scene // Загружаем геометрию
+        mr2.traverse((node) => { // Загружаем текстуру
+            if (node.isMesh) {
+                node.material = currentMetallMaterial,
+                node.castShadow = true,
+                node.receiveShadow = true
+            }
+        })
+        mr2.scale.setScalar(.01) // Сразу во все направления
+        mr2.rotation.set(0, THREE.MathUtils.degToRad(180), 0)
+        mr2.position.set(-.35, 0, .4)
+        scene.add(mr2)
+    }
+)
+
+let ml = null
+loader.load(
+    './models/ML.glb',
+    (gltf) => {
+        ml = gltf.scene // Загружаем геометрию
+        ml.traverse((node) => { // Траверс как раз позволяет пройтись по всем дочерним элементам.
+            if (node.isMesh) {
+                node.material = currentMetallMaterial,
+                node.castShadow = true,
+                node.receiveShadow = true
+            }
+        })
+        ml.scale.setScalar(.01)
+        ml.rotation.set(0, THREE.MathUtils.degToRad(180), 0)
+        ml.position.set(.375, 0, .4)
+        // scene.add(ml)
+    }
+)
+
+let ml2 = null
 loader.load(
     './models/ML2.glb',
     (gltf) => {
-        const ml2 = gltf.scene // Загружаем геометрию
+        ml2 = gltf.scene // Загружаем геометрию
         ml2.traverse((node) => { // Траверс как раз позволяет пройтись по всем дочерним элементам.
             if (node.isMesh) {
-                node.material = metallMaterial,
+                node.material = currentMetallMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
@@ -251,7 +347,7 @@ loader.load(
         const tb = gltf.scene // Загружаем геометрию
         tb.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = metallMaterial,
+                node.material = currentMetallMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
@@ -269,7 +365,7 @@ loader.load(
         const mf = gltf.scene // Загружаем геометрию
         mf.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = metallMaterial,
+                node.material = currentMetallMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
@@ -287,7 +383,7 @@ loader.load(
         const mg = gltf.scene // Загружаем геометрию
         mg.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = metallMaterial,
+                node.material = currentMetallMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
@@ -305,7 +401,7 @@ loader.load(
         const mg2 = gltf.scene // Загружаем геометрию
         mg2.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = metallMaterial,
+                node.material = currentMetallMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
@@ -323,8 +419,8 @@ loader.load(
         const s1 = gltf.scene // Загружаем геометрию
         s1.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = softMaterial,
-                node.castShadow = true,
+                node.material = currentSoftMaterial,
+                node.castShadow = true
                 node.receiveShadow = true
             }
         })
@@ -340,7 +436,7 @@ loader.load(
         const s1 = gltf.scene // Загружаем геометрию
         s1.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = softMaterial,
+                node.material = currentSoftMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
@@ -357,33 +453,53 @@ loader.load(
         const s2 = gltf.scene // Загружаем геометрию
         s2.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = softMaterial,
+                node.material = currentSoftMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
         })
         s2.scale.setScalar(.01)
         s2.rotation.set(THREE.MathUtils.degToRad(90), 0, 0)
-        s2.position.set(-.365, .38, -.28)
+        s2.position.set(-.365, .375, -.28)
         scene.add(s2)
     }
 )
 
+let s3 = null
 loader.load(
     './models/S3.glb',
     (gltf) => {
-        const s3 = gltf.scene // Загружаем геометрию
+        s3 = gltf.scene // Загружаем геометрию
         s3.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
-                node.material = softMaterial,
+                node.material = currentSoftMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
         })
         s3.scale.setScalar(.01)
         s3.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(90))
-        s3.position.set(-.365, .38, -.19)
-        scene.add(s3)
+        s3.position.set(-.365, .375, -.19)
+        // scene.add(s3)
+    }
+) 
+
+let s4 = null
+loader.load(
+    './models/S3.glb',
+    (gltf) => {
+        s4 = gltf.scene // Загружаем геометрию
+        s4.traverse((node) => { // Загружаем текстуру
+            if (node.isMesh) {
+                node.material = currentSoftMaterial,
+                node.castShadow = true,
+                node.receiveShadow = true
+            }
+        })
+        s4.scale.setScalar(.01)
+        s4.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(90))
+        s4.position.set(.272, .375, -.19)
+        // scene.add(s4)
     }
 ) 
 
@@ -409,28 +525,10 @@ renderer.shadowMap.enabled = true // Добавление теней в ренд
 renderer.shadowMap.type = THREE.PCFSoftShadowMap // Чтоб были супер мягкие тени
 renderer.setSize(config.sizes.width, config.sizes.height)
 
-// Постпроцессинг
-
-const composer = new EffectComposer(renderer) // Композер, прослойка между рендерингом и анимейтом
-
-const renderPass = new RenderPass(scene, camera) // Сам движок рендеринга
-composer.addPass(renderPass) // Проход движка через композер
-
-const bloomPass = new UnrealBloomPass( // Эффект свечения
-    new THREE.Vector2(config.sizes.height, config.sizes.width, 150, 120, 1))
-composer.addPass(bloomPass) // Проход эффекта через композер
-
-// Обработчик передвижения мыши
-
-// const cursor = {x: 0, y: 0}
-// canvas.addEventListener('mousemove', (MouseEvent) => {
-//     cursor.x = -(MouseEvent.clientX / sizes.width - 0.5)
-//     cursor.y = MouseEvent.clientY / sizes.height - 0.5
-// })
-
 // Анимирование и управление
 
 function animate() {
+    updateCameraTween() // До controls.update(), чтобы орбит подхватил новую позицию
     controls.update() // Постоянно обновляет орбит
     // cube.rotation.y -= THREE.MathUtils.degToRad(.05) // Постоянная анимация вращения
     requestAnimationFrame(animate) // Бесконечно вызывает функцию и синхронизируется с частотой экрана
@@ -460,19 +558,6 @@ window.addEventListener('resize', () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
-// Полноэкранный режим канваса
-
-window.addEventListener('dblclick', () => {
-    if (document.fullscreenElement) {
-        document.exitFullscreen()
-    }
-    else {
-        canvas.requestFullscreen()
-    }
-})
-
-console.log(material)
-
 // Режим разработчика
 
 if (devMode) {
@@ -492,32 +577,104 @@ if (devMode) {
         pointLightHelper, 
         pointLightHelper2,
         axisHelper,
-        gridHelper
+        gridHelper,
+        shadowHelper
     )
 }
-
-// Buttons
-
-// document.querySelectorAll('.button').forEach(button => {
-//     button.addEventListener('click', () => {
-//         scene.remove(s1)
-//     })
-// })
 
 // Лак / Цинк: переключение metalness и активной кнопки
 
 const zinc = document.getElementById('zinc')
 const lacquer = document.getElementById('lacquer')
-const lacquerMetalness = metallMaterial.metalness
+
+// mr, mr2, ml, ml2, s3, s4 могут быть не в сцене, поэтому обходим их отдельно
+const replaceMaterial = (from, to) => {
+    const objects = [scene, mr, mr2, ml, ml2, s3, s4]
+    objects.forEach(object => {
+        object?.traverse((node) => {
+            if (node.isMesh && node.material === from) node.material = to
+        })
+    })
+}
+
+const setMetallMaterial = (from, to) => {
+    currentMetallMaterial = to
+    replaceMaterial(from, to)
+}
 
 zinc.addEventListener('click', () => {
-    metallMaterial.metalness = .3
+    setMetallMaterial(metallMaterial2, metallMaterial)
+    resetCamera()
     zinc.className = 'active'
     lacquer.className = 'button'
 })
 
 lacquer.addEventListener('click', () => {
-    metallMaterial.metalness = lacquerMetalness
+    setMetallMaterial(metallMaterial, metallMaterial2)
+    resetCamera()
     lacquer.className = 'active'
     zinc.className = 'button'
+})
+
+// Бежевые / Серые: смена ткани подушек
+
+const beige = document.getElementById('beige')
+const grey = document.getElementById('grey')
+
+const setSoftMaterial = (from, to) => {
+    currentSoftMaterial = to
+    replaceMaterial(from, to)
+}
+
+grey.addEventListener('click', () => {
+    setSoftMaterial(softMaterial, softMaterial2)
+    resetCamera()
+    grey.className = 'active'
+    beige.className = 'button'
+})
+
+beige.addEventListener('click', () => {
+    setSoftMaterial(softMaterial2, softMaterial)
+    resetCamera()
+    beige.className = 'active'
+    grey.className = 'button'
+})
+
+// Модуль: переключение активной кнопки и моделей
+
+const moduleButtons = document.querySelectorAll('.footer-block .buttons:first-child li:not(.label)')
+
+moduleButtons.forEach(li => {
+    li.addEventListener('click', () => {
+        moduleButtons.forEach(other => other.className = 'button')
+        li.className = 'active' // background: rgb(240, 240, 240)
+        resetCamera()
+
+        if (li.textContent.trim() === 'М2') {
+            if (mr2) scene.remove(mr2)
+            if (mr) scene.add(mr)
+            if (s3) scene.add(s3)
+            if (ml) scene.remove(ml) // Сброс после М3
+            if (s4) scene.remove(s4)
+            if (ml2) scene.add(ml2)
+        }
+
+        if (li.textContent.trim() === 'М1') {
+            if (mr) scene.remove(mr)
+            if (mr2) scene.add(mr2)
+            if (s3) scene.remove(s3)
+            if (ml) scene.remove(ml) // Сброс после М3
+            if (s4) scene.remove(s4)
+            if (ml2) scene.add(ml2)
+        }
+
+        if (li.textContent.trim() === 'М3') {
+            if (mr2) scene.remove(mr2)
+            if (ml2) scene.remove(ml2)
+            if (mr) scene.add(mr)
+            if (ml) scene.add(ml)
+            if (s3) scene.add(s3)
+            if (s4) scene.add(s4)
+        }
+    })
 })

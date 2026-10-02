@@ -51,7 +51,7 @@ html, body {
 .footer-left, .footer-right, .footer-block {
     position: fixed;
     display: flex;
-    bottom: 40px;
+    bottom: 30px;
     z-index: 1;
 }
 
@@ -64,7 +64,7 @@ html, body {
 }
 
 .footer-right {
-    right: 60px;
+    right: 30px;
 }
 
 .buttons {
