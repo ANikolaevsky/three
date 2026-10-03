@@ -262,6 +262,10 @@ scene.add(plane)
 
 const loader = new GLTFLoader()
 
+// Все модели дивана (М1–М3) лежат в одной группе, чтобы М4 могла убрать их разом
+const sofa = new THREE.Group()
+scene.add(sofa)
+
 let currentMetallMaterial = metallMaterial2 // Металл для подгружаемых моделей, меняется кнопками Лак / Цинк
 let currentSoftMaterial = softMaterial // Ткань подушек, меняется кнопками Бежевые / Серые
 
@@ -280,7 +284,7 @@ loader.load(
         mr.scale.setScalar(.01) // Сразу во все направления
         mr.rotation.set(0, THREE.MathUtils.degToRad(180), 0)
         mr.position.set(-.35, 0, .4)
-        // scene.add(mr)
+        // sofa.add(mr)
     }
 )
 
@@ -299,7 +303,7 @@ loader.load(
         mr2.scale.setScalar(.01) // Сразу во все направления
         mr2.rotation.set(0, THREE.MathUtils.degToRad(180), 0)
         mr2.position.set(-.35, 0, .4)
-        scene.add(mr2)
+        sofa.add(mr2)
     }
 )
 
@@ -318,7 +322,7 @@ loader.load(
         ml.scale.setScalar(.01)
         ml.rotation.set(0, THREE.MathUtils.degToRad(180), 0)
         ml.position.set(.375, 0, .4)
-        // scene.add(ml)
+        // sofa.add(ml)
     }
 )
 
@@ -337,7 +341,7 @@ loader.load(
         ml2.scale.setScalar(.01)
         ml2.rotation.set(0, THREE.MathUtils.degToRad(180), 0)
         ml2.position.set(.375, 0, .4)
-        scene.add(ml2)
+        sofa.add(ml2)
     }
 )
 
@@ -355,7 +359,7 @@ loader.load(
         tb.scale.setScalar(.01)
         tb.rotation.set(0, THREE.MathUtils.degToRad(270), 0)
         tb.position.set(.35, 0, .375)
-        scene.add(tb)
+        sofa.add(tb)
     }
 )
 
@@ -373,7 +377,7 @@ loader.load(
         mf.scale.setScalar(.01)
         mf.rotation.set(0, THREE.MathUtils.degToRad(90), 0)
         mf.position.set(-.35, 0, -.275)
-        scene.add(mf)
+        sofa.add(mf)
     }
 )
 
@@ -391,7 +395,7 @@ loader.load(
         mg.scale.setScalar(.01)
         mg.rotation.set(THREE.MathUtils.degToRad(180), 0, 0)
         mg.position.set(-.35, .285, -.275)
-        scene.add(mg)
+        sofa.add(mg)
     }
 )
 
@@ -409,41 +413,43 @@ loader.load(
         mg2.scale.setScalar(.01)
         mg2.rotation.set(THREE.MathUtils.degToRad(180), 0, 0)
         mg2.position.set(-.35, .285, .05)
-        scene.add(mg2)
+        sofa.add(mg2)
     }
 )
 
+let s1Left = null
 loader.load(
     './models/S1.glb',
     (gltf) => {
-        const s1 = gltf.scene // Загружаем геометрию
-        s1.traverse((node) => { // Загружаем текстуру
+        s1Left = gltf.scene // Загружаем геометрию
+        s1Left.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
                 node.material = currentSoftMaterial,
                 node.castShadow = true
                 node.receiveShadow = true
             }
         })
-        s1.scale.setScalar(.01)
-        s1.position.set(-.365, .290, .387)
-        scene.add(s1)
+        s1Left.scale.setScalar(.01)
+        s1Left.position.set(-.365, .290, .387)
+        sofa.add(s1Left)
     }
 )
 
+let s1Right = null
 loader.load(
     './models/S1.glb',
     (gltf) => {
-        const s1 = gltf.scene // Загружаем геометрию
-        s1.traverse((node) => { // Загружаем текстуру
+        s1Right = gltf.scene // Загружаем геометрию
+        s1Right.traverse((node) => { // Загружаем текстуру
             if (node.isMesh) {
                 node.material = currentSoftMaterial,
                 node.castShadow = true,
                 node.receiveShadow = true
             }
         })
-        s1.scale.setScalar(.01)
-        s1.position.set(0, .290, .387)
-        scene.add(s1)
+        s1Right.scale.setScalar(.01)
+        s1Right.position.set(0, .290, .387)
+        sofa.add(s1Right)
     }
 )
 
@@ -461,7 +467,7 @@ loader.load(
         s2.scale.setScalar(.01)
         s2.rotation.set(THREE.MathUtils.degToRad(90), 0, 0)
         s2.position.set(-.365, .375, -.28)
-        scene.add(s2)
+        sofa.add(s2)
     }
 )
 
@@ -480,7 +486,7 @@ loader.load(
         s3.scale.setScalar(.01)
         s3.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(90))
         s3.position.set(-.365, .375, -.19)
-        // scene.add(s3)
+        // sofa.add(s3)
     }
 ) 
 
@@ -499,9 +505,41 @@ loader.load(
         s4.scale.setScalar(.01)
         s4.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(90))
         s4.position.set(.272, .375, -.19)
-        // scene.add(s4)
+        // sofa.add(s4)
     }
 ) 
+
+let t2 = null
+const t2Parts = {} // Детали сборки по именам: t2Parts.Node3 и т.д.
+
+// Половины столешницы: М4 — стандартные, М5 — альтернативные (стоят на тех же координатах)
+const t2TopsM4 = ['Node3', 'Node4']
+const t2TopsM5 = ['Node8', 'Node7'] // Node8 на месте Node3, Node7 на месте Node4
+
+const setT2Tops = (show, hide) => {
+    show.forEach(name => { if (t2Parts[name]) t2Parts[name].visible = true })
+    hide.forEach(name => { if (t2Parts[name]) t2Parts[name].visible = false })
+}
+
+loader.load(
+    './models/T2_Assembly.glb',
+    (gltf) => {
+        t2 = gltf.scene
+        t2.traverse((node) => {
+            if (node.isMesh) {
+                node.material = currentMetallMaterial,
+                node.castShadow = true,
+                node.receiveShadow = true
+                t2Parts[node.name] = node
+            }
+        })
+        setT2Tops(t2TopsM4, t2TopsM5) // По умолчанию альтернативные детали скрыты
+        t2.scale.setScalar(.01)
+        t2.rotation.set(0, THREE.MathUtils.degToRad(90), 0)
+        t2.position.set(.89, .15, 1.54)
+        // scene.add(t2)
+    }
+)
 
 // Рендер
 
@@ -587,9 +625,9 @@ if (devMode) {
 const zinc = document.getElementById('zinc')
 const lacquer = document.getElementById('lacquer')
 
-// mr, mr2, ml, ml2, s3, s4 могут быть не в сцене, поэтому обходим их отдельно
+// sofa, mr, mr2, ml, ml2, s3, s4, t2 могут быть не в сцене, поэтому обходим их отдельно
 const replaceMaterial = (from, to) => {
-    const objects = [scene, mr, mr2, ml, ml2, s3, s4]
+    const objects = [scene, sofa, mr, mr2, ml, ml2, s3, s4, t2]
     objects.forEach(object => {
         object?.traverse((node) => {
             if (node.isMesh && node.material === from) node.material = to
@@ -650,31 +688,53 @@ moduleButtons.forEach(li => {
         li.className = 'active' // background: rgb(240, 240, 240)
         resetCamera()
 
-        if (li.textContent.trim() === 'М2') {
-            if (mr2) scene.remove(mr2)
-            if (mr) scene.add(mr)
-            if (s3) scene.add(s3)
-            if (ml) scene.remove(ml) // Сброс после М3
-            if (s4) scene.remove(s4)
-            if (ml2) scene.add(ml2)
+        const name = li.textContent.trim()
+
+        // У объекта один родитель: scene.add(s1) забирает подушку из sofa, а sofa.add(s1) возвращает её в диван
+        if (s1Left) sofa.add(s1Left)
+        if (s1Right) sofa.add(s1Right)
+
+        if (name === 'М4' || name === 'М5' || name === 'М6') {
+            scene.remove(sofa)
+            if (t2) scene.add(t2)
+            if (name === 'М4' || name === 'М6') setT2Tops(t2TopsM4, t2TopsM5)
+            if (name === 'М5') setT2Tops(t2TopsM5, t2TopsM4)
+            if (name === 'М4') {
+                if (s1Left) scene.add(s1Left)
+                if (s1Right) scene.add(s1Right)
+            }
+            return
         }
 
-        if (li.textContent.trim() === 'М1') {
-            if (mr) scene.remove(mr)
-            if (mr2) scene.add(mr2)
-            if (s3) scene.remove(s3)
-            if (ml) scene.remove(ml) // Сброс после М3
-            if (s4) scene.remove(s4)
-            if (ml2) scene.add(ml2)
+        // М1–М3: возвращаем диван, убираем t2
+        scene.add(sofa)
+        if (t2) scene.remove(t2)
+
+        if (name === 'М2') {
+            if (mr2) sofa.remove(mr2)
+            if (mr) sofa.add(mr)
+            if (s3) sofa.add(s3)
+            if (ml) sofa.remove(ml) // Сброс после М3
+            if (s4) sofa.remove(s4)
+            if (ml2) sofa.add(ml2)
         }
 
-        if (li.textContent.trim() === 'М3') {
-            if (mr2) scene.remove(mr2)
-            if (ml2) scene.remove(ml2)
-            if (mr) scene.add(mr)
-            if (ml) scene.add(ml)
-            if (s3) scene.add(s3)
-            if (s4) scene.add(s4)
+        if (name === 'М1') {
+            if (mr) sofa.remove(mr)
+            if (mr2) sofa.add(mr2)
+            if (s3) sofa.remove(s3)
+            if (ml) sofa.remove(ml) // Сброс после М3
+            if (s4) sofa.remove(s4)
+            if (ml2) sofa.add(ml2)
+        }
+
+        if (name === 'М3') {
+            if (mr2) sofa.remove(mr2)
+            if (ml2) sofa.remove(ml2)
+            if (mr) sofa.add(mr)
+            if (ml) sofa.add(ml)
+            if (s3) sofa.add(s3)
+            if (s4) sofa.add(s4)
         }
     })
 })

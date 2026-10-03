@@ -56,7 +56,10 @@ html, body {
 }
 
 .footer-block {
-    left: 25%;
+    left: 0;
+    right: 0;
+    width: fit-content;
+    margin: 0 auto;
 }
 
 .footer-left {
