@@ -1,6 +1,17 @@
 
 // Всё из THREE, что осталось, но не задействовано в основном проекте
 
+// const stats = new Stats() // FPS
+// document.body.appendChild(stats.dom)
+
+// Свет
+
+// const ambientLight = new THREE.AmbientLight('white', 0.5) // Равномерный фоновый свет
+// scene.add(ambientLight)
+
+// const hemiLight = new THREE.HemisphereLight(0x0099ff, 0xaa5500)
+// scene.add(hemiLight)
+
 // Куб
 
 // const tempVector = new THREE.Vector3(-1, 0.15, 0) // Если хотим присваивать значение координат много раз

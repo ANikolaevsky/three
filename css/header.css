@@ -1,0 +1,25 @@
+.header {
+    position: fixed;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    top: 18px;
+    left: 18px;
+    right: 18px;
+    float: left;
+    padding: 8px 18px;
+    background: rgb(255, 255, 255);
+    border-radius: 6px;
+    z-index: 1;
+}
+
+.logo-icon {
+    display: block;
+    height: 20px;
+    align-items: center;
+    margin-left: 8px;
+}
+
+a {
+    text-decoration: none;
+}

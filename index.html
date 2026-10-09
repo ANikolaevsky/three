@@ -7,43 +7,55 @@
 
 </head>
 <body>
+    <header class="header">
+        <a class="logo" href="#"><img class="logo-icon" src="img/logo.svg"></a>
+        <a class="button" href="#">Вернуться на сайт</a>
+    </header>
     <div class="footer-block">
-        <ul class="buttons">
-            <li class="label">Модуль</li>
+        <ul class="buttons" id="chairs">
+            <li class="label">Кресла</li>
             <li class="active">М1</li>
             <li class="button">М2</li>
             <li class="button">М3</li>
             <li class="button">М4</li>
+        </ul>
+        <ul class="buttons" id="tables">
+            <li class="label">Столики</li>
             <li class="button">М5</li>
             <li class="button">М6</li>
+            <li class="button">М7</li>
         </ul>
-        <ul class="buttons">
-            <li class="label">Металл</li>
+
+        <ul class="buttons" id="tables2">
+            <li class="label">Столы</li>
+            <li class="button">М8</li>
+            <li class="button">М9</li>
+            <li class="button">М10</li>
+        </ul>
+
+        <ul class="buttons" id="complects">
+            <li class="label">Комплекты</li>
+            <li class="button">4.2</li>
+            <li class="button">6.2</li>
+            <li class="button">7.3</li>
+        </ul>
+    </div>
+
+    <div class="footer-left">
+        <ul class="buttons" id="metall">
+            <li class="label">Покрытие</li>
             <li class="active" id="lacquer">Лак</li>
             <li class="button" id="zinc">Цинк</li>
         </ul>
-        <ul class="buttons">
-            <li class="label">Подушки</li>
-            <li class="active" id="beige">Бежевые</li>
-            <li class="button" id="grey">Серые</li>
-            <li class="button">Синие</li>
+        <ul class="buttons" id="textile">
+            <li class="label">Ткань</li>
+            <li class="active" id="beige">Бежевая</li>
+            <li class="button" id="grey">Серая</li>
         </ul>
+        <button class="button" id="assembly">Сложить</button>
     </div>
-    <div class="footer-left">
-        <ul class="buttons">
-            <li class="label">Добавить слева</li>
-            <li class="button">М1</li>
-            <li class="button">М2</li>
-            <li class="button">М3</li>
-        </ul>
-    </div>
-        <div class="footer-right">
-        <ul class="buttons">
-            <li class="label">Добавить справа</li>
-            <li class="button">М1</li>
-            <li class="button">М2</li>
-            <li class="button">М3</li>
-        </ul>
+    <div class="footer-right">
+        <button class="button" id="action">Сделать заказ</button>
     </div>
     <canvas class="canvas"></canvas>
     <script src="./index.js" type="module"></script>

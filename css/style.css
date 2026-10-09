@@ -1,3 +1,6 @@
+@import "header.css";
+@import "footer.css";
+
 @font-face {
     font-family: 'DINPro';
     src: url('../fonts/DINPro-Bold.woff') format('woff'),
@@ -48,28 +51,6 @@ html, body {
     left: 0;
 }
 
-.footer-left, .footer-right, .footer-block {
-    position: fixed;
-    display: flex;
-    bottom: 30px;
-    z-index: 1;
-}
-
-.footer-block {
-    left: 0;
-    right: 0;
-    width: fit-content;
-    margin: 0 auto;
-}
-
-.footer-left {
-    left: 30px;
-}
-
-.footer-right {
-    right: 30px;
-}
-
 .buttons {
     display: inline-block;
     float: left;
@@ -82,6 +63,26 @@ html, body {
     margin-right: 10px;
 }
 
+#metall, #textile {
+    background: rgb(230, 230, 230);
+}
+
+#metall li, #textile li {
+    background: rgb(230, 230, 230);
+
+    &:hover {
+    background: rgb(250, 250, 250);
+    }
+
+    &.label:hover {
+    background: rgb(230, 230, 230);
+    }
+
+    &.active {
+    background: rgb(250, 250, 250);
+    }
+}
+
 .label {
     padding: 9px 16px 0px 2px;
     float: left;
@@ -90,14 +91,15 @@ html, body {
 .active {
     padding: 10px 8px;
     background: rgb(240, 240, 240);
-    color: rgb(30, 30, 30);
+    color: rgb(89, 89, 89);
     border: 0px solid #fff;
-    border-radius: 2px;
+    border-radius: 3px;
     cursor: pointer;
     transition: all .25s ease;
     opacity: 1;
     float: left; 
     margin-right: 6px;
+    font-weight: 400;
 }
 
 .button {
@@ -105,7 +107,7 @@ html, body {
     background: rgb(255, 255, 255);
     color: rgb(30, 30, 30);
     border: 0px solid #fff;
-    border-radius: 2px;
+    border-radius: 3px;
     cursor: pointer;
     transition: all .25s ease;
     opacity: 1;
@@ -119,3 +121,27 @@ html, body {
     background: rgb(240, 240, 240);
     }
 }
+
+#assembly {
+    padding: 18px 18px;
+    float: left;
+    border-radius: 6px;
+    background: rgb(230, 230, 230);
+
+    &:hover {
+    background: rgb(255, 255, 255);
+    }
+}
+
+#action {
+    padding: 18px 18px;
+    float: left;
+    color: rgb(242, 242, 242);
+    border-radius: 6px;
+    background: rgb(68, 68, 68);
+
+    &:hover {
+    background: rgb(194, 114, 107);
+    }
+}
+
