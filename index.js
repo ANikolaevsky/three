@@ -11,19 +11,19 @@ import { Pane } from 'tweakpane'
 import Stats from 'three/addons/libs/stats.module.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 
-const devMode = false
+const devMode = false // Режим разработчика
 
 // Единый объект конфигурации
 
 const config = {
     shadows: {
         resolution: 2048, // Разрешение теней (512, 1024, 2048)
-        normalBias: .0001, // Порядка 2–3 текселя теневой карты, иначе тень «отрывается» от объектов
+        normalBias: .0002, // Порядка 2–3 текселя теневой карты, иначе тень «отрывается» от объектов
         area: 1.5, // Половина размера области, в которой считаются тени
-        areaLarge: 2.5 // То же для больших моделей (комплект 7.3)
+        areaLarge: 2.5, // То же для больших моделей (комплект 7.3)
+        areaSmall: 0.8 // Для сложенных комплектов (комплект 7.4)
     },
     lighting: {
-        ambientIntensity: .4,
         directionalIntensity: 8
     },
     camera: {
@@ -51,7 +51,7 @@ dirLight.position.set(1, 6, 1)
 dirLight.castShadow = true // Включает отбрасывание тени от этого источника
 dirLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
 dirLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
-dirLight.shadow.radius = 1
+// dirLight.shadow.radius = 1
 
 dirLight.shadow.camera.near = config.camera.near
 dirLight.shadow.camera.far = config.camera.far
@@ -832,12 +832,13 @@ beige.addEventListener('click', () => {
 // Сложить / Разложить: комплект 7.3 меняется на сложенный вариант a74 и обратно
 
 const assembly = document.getElementById('assembly')
+const assemblyLabel = assembly.querySelector('.assembly-label') // Текст отдельно, чтобы не затирать иконку
 let isFolded = false
 
 // Только состояние и текст кнопки, модели меняет обработчик клика
 const setFolded = (folded) => {
     isFolded = folded
-    assembly.textContent = folded ? 'Разложить' : 'Сложить'
+    assemblyLabel.textContent = folded ? 'Разложить' : 'Сложить'
 }
 
 assembly.addEventListener('click', () => {
@@ -852,7 +853,7 @@ assembly.addEventListener('click', () => {
         scene.add(a74)
         movePointLight2(pointLight2Default) // Сложенный комплект меньше, свет возвращаем на обычное место
         setCameraHome(cameraHomeDefault) // Камера как у М7 и М10
-        setShadowArea(config.shadows.area) // Сложенный комплект помещается в обычную область теней
+        setShadowArea(config.shadows.areaSmall) // Сложенный комплект помещается в обычную область теней
     } else {
         scene.remove(a74)
         scene.add(a73)

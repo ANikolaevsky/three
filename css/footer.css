@@ -7,23 +7,7 @@
     right: 0;
     width: fit-content;
     margin: 0 auto;
-}
-
-
-.footer-left {
-    position: fixed;
-    display: flex;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1;
-    left: 18px;
-    flex-direction: column; /* Блоки друг под другом, а не в строку */
-    align-items: flex-start; /* Ширина блоков по содержимому, а не по самому широкому */
-    gap: 8px; /* Отступ между блоками */
-
-    .buttons {
-    margin-right: 0; /* Отменяем отступ справа от .buttons:not(:last-of-type) */
-    }
+    opacity: .8;
 }
 
 .footer-right {
@@ -32,4 +16,20 @@
     z-index: 1;
     right: 18px;
     bottom: 18px;
+}
+
+#action {
+    padding: 18px 18px;
+    float: right;
+    color: rgb(242, 242, 242);
+    border-radius: 5px;
+    background: rgb(68, 68, 68);
+
+    &:hover {
+    background: rgb(194, 114, 107);
+    }
+}
+
+.icon-2 {
+    margin-left: 20px; 
 }
