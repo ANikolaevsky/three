@@ -55,7 +55,7 @@ html, body {
 .buttons {
     display: inline-block;
     float: left;
-    padding: 8px 18px;
+    padding: 8px 8px 8px 16px;
     background: rgb(255, 255, 255);
     border-radius: 5px;
 
@@ -65,22 +65,26 @@ html, body {
 }
 
 .label {
-    padding: 9px 18px 0px 2px;
+    padding: 9px 20px 0px 0px;
     float: left;
+    font-weight: 400;
+    color: rgb(46, 46, 46);
 }
 
 .active {
     padding: 10px 8px;
     background: rgb(240, 240, 240);
-    color: rgb(89, 89, 89);
+    color: rgb(1, 1, 1);
     border: 0px solid #fff;
     border-radius: 3px;
     cursor: pointer;
     transition: all .25s ease;
     opacity: 1;
     float: left; 
+        
+    &:not(:last-of-type) {
     margin-right: 6px;
-    font-weight: 400;
+    }
 }
 
 .button {

@@ -24,7 +24,7 @@ const config = {
         areaSmall: 0.8 // Для сложенных комплектов (комплект 7.4)
     },
     lighting: {
-        directionalIntensity: 8
+        directionalIntensity: 6
     },
     camera: {
         fov: 14,
@@ -81,7 +81,7 @@ pointLight.position.set(2, 1, 2)
 // pointLight.shadow.camera.far = 10 // Макс расстояние отбрасывания теней
 // pointLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
 // pointLight.shadow.radius = 1 // Мягкость теней
-scene.add(pointLight)
+// scene.add(pointLight)
 
 const pointLightHelper = new THREE.PointLightHelper(pointLight, .1)
 scene.add(pointLightHelper)
@@ -242,14 +242,14 @@ const loadTexture = (path, isColor = false, scale = .01) => {
 
 const metallMaterial = new THREE.MeshStandardMaterial({
     map: loadTexture('./img/MetalGalvanizedSteelWorn001_COL_2K_METALNESS.jpg', true), // Базовое изображение текстуры
-    // aoMap: loadTexture('./img/Poliigon_MetalGalvanizedZinc_7184_AmbientOcclusion.jpg'), // Карта теней
+    aoMap: loadTexture('./img/Poliigon_MetalGalvanizedZinc_7184_AmbientOcclusion.jpg'), // Карта теней
     roughnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_ROUGHNESS_2K_METALNESS.jpg'), // Карта шероховатостей
     metalnessMap: loadTexture('./img/MetalGalvanizedSteelWorn001_METALNESS_2K_METALNESS.jpg'), // Металл или диэлектрик
     normalMap: loadTexture('./img/MetalGalvanizedSteelWorn001_NRM_2K_METALNESS.jpg'), // Карта нормалей
     // displacementMap: loadTexture('./img/Poliigon_Displacement.tiff'), // Карта высот
     // displacementScale: 0,
-    metalness: .5,
-    roughness: .4,
+    metalness: .7,
+    roughness: .3,
     // emissive: 'rgb(167, 167, 167)' // Излучение
 })
 
@@ -259,10 +259,34 @@ const metallMaterial2 = new THREE.MeshStandardMaterial({
     roughnessMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Roughness.jpg'), // Карта шероховатостей
     metalnessMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Metallic.jpg'), // Металл или диэлектрик
     normalMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Normal.png'), // Карта нормалей
-    // displacementMap: loadTexture('./img/Poliigon_Displacement.tiff'), // Карта высот
-    // displacementScale: 0,
-    metalness: 1,
-    roughness: 1
+    displacementMap: loadTexture('./img/Poliigon_Displacement.tiff'), // Карта высот
+    displacementScale: 0,
+    metalness: .7,
+    roughness: .5
+})
+
+const metallMaterial3 = new THREE.MeshStandardMaterial({
+    map: loadTexture('./img/MetalCladdingFrame006/MetalCladdingFrame006_COL_2K.jpg', true),
+    aoMap: loadTexture('./img/MetalCladdingFrame006/MetalCladdingFrame006_BUMP_2K.jpg'),
+    roughnessMap: loadTexture('./img/MetalCladdingFrame006/MetalCladdingFrame006_GLOSS_2K.jpg'),
+    metalnessMap: loadTexture('./img/MetalCladdingFrame006/MetalCladdingFrame006_REFL_2K.jpg'),
+    normalMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Normal.png'),
+    displacementMap: loadTexture('./img/MetalCladdingFrame006/MetalCladdingFrame006_DISP16_2K.tiff'),
+    displacementScale: 0,
+    metalness: .7,
+    roughness: .5
+})
+
+const metallMaterial4 = new THREE.MeshStandardMaterial({
+    map: loadTexture('./img/MetalCladdingFrame007/MetalCladdingFrame007_COL_2K.jpg', true),
+    aoMap: loadTexture('./img/MetalCladdingFrame007/MetalCladdingFrame007_BUMP_2K.jpg'),
+    roughnessMap: loadTexture('./img/MetalCladdingFrame007/MetalCladdingFrame007_GLOSS_2K.jpg'),
+    metalnessMap: loadTexture('./img/MetalCladdingFrame007/MetalCladdingFrame007_REFL_2K.jpg'),
+    normalMap: loadTexture('./img/Poliigon_MetalPaintedMatte_7037_Normal.png'),
+    displacementMap: loadTexture('./img/MetalCladdingFrame007/MetalCladdingFrame007_DISP16_2K.tiff'),
+    displacementScale: 0,
+    metalness: .8,
+    roughness: .2
 })
 
 const softMaterial = new THREE.MeshStandardMaterial({ 
@@ -287,6 +311,42 @@ const softMaterial2 = new THREE.MeshStandardMaterial({
 
 softMaterial2.normalScale.set(.1, .1) // Уменьшение значений неправильной карты нормалей
 
+const softMaterial3 = new THREE.MeshStandardMaterial({ 
+    map: loadTexture('/img/Poliigon_FabricUpholsteryDrapery_8446_BaseColor.jpg', true),
+    aoMap: loadTexture('./img/Poliigon_FabricUpholsteryDrapery_8446_AmbientOcclusion.jpg'),
+    roughnessMap: loadTexture('./img/Poliigon_FabricUpholsteryDrapery_8446_Roughness.jpg'),
+    metalnessMap: loadTexture('./img/Poliigon_FabricUpholsteryDrapery_8446_Metallic.jpg'),
+    normalMap: loadTexture('./img/Poliigon_FabricUpholsteryDrapery_8446_Normal.png'), 
+    displacementMap: loadTexture('./img/Poliigon_FabricUpholsteryDrapery_8446_Displacement.tiff'), 
+    displacementScale: 0
+})
+
+softMaterial3.normalScale.set(.2, .2)
+
+const softMaterial4 = new THREE.MeshStandardMaterial({ 
+    map: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_BaseColor.jpg', true),
+    aoMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_AmbientOcclusion.jpg'), 
+    roughnessMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Roughness.jpg'),
+    metalnessMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Metallic.jpg'), 
+    normalMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Normal.png'), 
+    displacementMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Displacement.tiff'), 
+    displacementScale: 0
+})
+
+softMaterial4.normalScale.set(.2, .2)
+
+const softMaterial5 = new THREE.MeshStandardMaterial({ 
+    map: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_BaseColor.jpg', true),
+    aoMap: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_AmbientOcclusion.jpg'), 
+    roughnessMap: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_Roughness.jpg'),
+    metalnessMap: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_Metallic.jpg'), 
+    normalMap: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_Normal.png'), 
+    displacementMap: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_Displacement.tiff'), 
+    displacementScale: 0
+})
+
+softMaterial5.normalScale.set(.2, .2)
+
 // Плоскость
 
 const plane = new THREE.Mesh(
@@ -310,7 +370,7 @@ const sofa = new THREE.Group()
 scene.add(sofa)
 
 let currentMetallMaterial = metallMaterial2 // Металл по дефолту, меняется кнопками Лак / Цинк
-let currentSoftMaterial = softMaterial // Ткань по дефолту, меняется кнопками Бежевые / Серые
+let currentSoftMaterial = softMaterial // Ткань по дефолту, меняется кнопками Бежевые / Серые / Черные
 
 let mr = null
 loader.load(
@@ -752,8 +812,9 @@ animate()
 
 // Карта окружения
 
-// const pmrem = new THREE.PMREMGenerator(renderer)
-// scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+const pmrem = new THREE.PMREMGenerator(renderer)
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+scene.environmentIntensity = .3 // Сила освещения и отражений от окружения (фон не затрагивается)
 
 // Резиновый канвас (ресайз)
 
@@ -772,7 +833,9 @@ window.addEventListener('resize', () => {
 // Лак / Цинк: переключение metalness и активной кнопки
 
 const zinc = document.getElementById('zinc')
-const lacquer = document.getElementById('lacquer')
+const blackLacquer = document.getElementById('black-lacquer')
+const brownLacquer = document.getElementById('brown-lacquer')
+const whiteLacquer = document.getElementById('white-lacquer')
 
 // sofa, mr, mr2, ml, ml2, s3, s4, t2 могут быть не в сцене, поэтому обходим их отдельно
 const replaceMaterial = (from, to) => {
@@ -784,47 +847,111 @@ const replaceMaterial = (from, to) => {
     })
 }
 
-const setMetallMaterial = (from, to) => {
+const setMetallMaterial = (to) => {
+    replaceMaterial(currentMetallMaterial, to)
     currentMetallMaterial = to
-    replaceMaterial(from, to)
 }
 
 zinc.addEventListener('click', () => {
-    setMetallMaterial(metallMaterial2, metallMaterial)
+    setMetallMaterial(metallMaterial)
     resetCamera()
     zinc.className = 'active'
-    lacquer.className = 'button'
+    brownLacquer.className = 'button'
+    blackLacquer.className = 'button'
+    whiteLacquer.className = 'button'
 })
 
-lacquer.addEventListener('click', () => {
-    setMetallMaterial(metallMaterial, metallMaterial2)
+blackLacquer.addEventListener('click', () => {
+    setMetallMaterial(metallMaterial2)
     resetCamera()
-    lacquer.className = 'active'
+    blackLacquer.className = 'active'
+    brownLacquer.className = 'button'
     zinc.className = 'button'
+    whiteLacquer.className = 'button'
 })
 
-// Бежевые / Серые: смена ткани подушек
+brownLacquer.addEventListener('click', () => {
+    setMetallMaterial(metallMaterial3)
+    resetCamera()
+    blackLacquer.className = 'button'
+    brownLacquer.className = 'active'
+    zinc.className = 'button'
+    whiteLacquer.className = 'button'
+})
+
+whiteLacquer.addEventListener('click', () => {
+    setMetallMaterial(metallMaterial4)
+    resetCamera()
+    blackLacquer.className = 'button'
+    brownLacquer.className = 'button'
+    zinc.className = 'button'
+    whiteLacquer.className = 'active'
+})
+
+// Бежевые / Серые / Черные / Белые : смена ткани подушек
 
 const beige = document.getElementById('beige')
 const grey = document.getElementById('grey')
+const black = document.getElementById('black')
+const white = document.getElementById('white')
+const blue = document.getElementById('blue')
 
-const setSoftMaterial = (from, to) => {
+// Заменяем текущую ткань, какая бы ни была выбрана
+const setSoftMaterial = (to) => {
+    replaceMaterial(currentSoftMaterial, to)
     currentSoftMaterial = to
-    replaceMaterial(from, to)
+    // Для softMaterial4 свет слабее, для остальных тканей — значение из конфига
+    dirLight.intensity = to === softMaterial4 ? 3 : config.lighting.directionalIntensity
 }
 
-grey.addEventListener('click', () => {
-    setSoftMaterial(softMaterial, softMaterial2)
-    resetCamera()
-    grey.className = 'active'
-    beige.className = 'button'
-})
-
 beige.addEventListener('click', () => {
-    setSoftMaterial(softMaterial2, softMaterial)
+    setSoftMaterial(softMaterial)
     resetCamera()
     beige.className = 'active'
     grey.className = 'button'
+    black.className = 'button'
+    white.className = 'button'
+    blue.className = 'button'
+})
+
+grey.addEventListener('click', () => {
+    setSoftMaterial(softMaterial2)
+    resetCamera()
+    grey.className = 'active'
+    beige.className = 'button'
+    black.className = 'button'
+    white.className = 'button'
+    blue.className = 'button'
+})
+
+black.addEventListener('click', () => {
+    setSoftMaterial(softMaterial3)
+    resetCamera()
+    beige.className = 'button'
+    grey.className = 'button'
+    black.className = 'active'
+    white.className = 'button'
+    blue.className = 'button'
+})
+
+white.addEventListener('click', () => {
+    setSoftMaterial(softMaterial4)
+    resetCamera()
+    beige.className = 'button'
+    grey.className = 'button'
+    black.className = 'button'
+    white.className = 'active'
+    blue.className = 'button'
+})
+
+blue.addEventListener('click', () => {
+    setSoftMaterial(softMaterial5)
+    resetCamera()
+    beige.className = 'button'
+    grey.className = 'button'
+    black.className = 'button'
+    white.className = 'button'
+    blue.className = 'active'
 })
 
 // Модуль: переключение активной кнопки и моделей
@@ -1007,6 +1134,12 @@ if (devMode) {
     pane.addBinding(metallMaterial2, 'roughness', {min: 0, max: 1, step: .1})
     pane.addBinding(softMaterial2, 'metalness', {min: 0, max: 1, step:.1})
     pane.addBinding(softMaterial2, 'roughness', {min: 0, max: 1, step: .1})
+    pane.addBinding(softMaterial3, 'metalness', {min: 0, max: 1, step:.1})
+    pane.addBinding(softMaterial3, 'roughness', {min: 0, max: 1, step: .1})
+    pane.addBinding(softMaterial3, 'normalScale', {
+        x: {min: -2, max: 2, step: .1},
+        y: {min: -2, max: 2, step: .1}
+    })
 } else {
     scene.remove(
         dirLightHelper, 

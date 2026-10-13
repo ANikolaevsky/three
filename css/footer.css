@@ -10,6 +10,59 @@
     opacity: .8;
 }
 
+#metall, #textile, #scene {
+    background: rgb(230, 230, 230);
+}
+
+#metall li, #textile li, #scene li {
+    background: rgb(230, 230, 230);
+
+    &:hover {
+    background: rgb(250, 250, 250);
+    }
+
+    &.label:hover {
+    background: rgb(230, 230, 230);
+    }
+
+    &.active {
+    background: rgb(250, 250, 250);
+    }
+}
+
+.footer-left {
+    position: fixed;
+    display: flex;
+    z-index: 1;
+    flex-direction: column; /* Блоки друг под другом, а не в строку */
+    align-items: flex-start; /* Ширина блоков по содержимому, а не по самому широкому */
+    gap: 8px; /* Отступ между блоками */
+    left: 18px;
+    bottom: 18px;
+}
+
+#assembly {
+    padding: 18px 18px;
+    float: left;
+    border-radius: 6px;
+    &:hover {
+    background: rgb(230, 230, 230);
+    }
+}
+
+#decompose {
+    padding: 18px 18px;
+    float: left;
+    border-radius: 6px;
+    &:hover {
+    background: rgb(230, 230, 230);
+    }
+}
+
+.icon {
+    margin-right: 15px; 
+}
+
 .footer-right {
     position: fixed;
     display: flex;
@@ -31,5 +84,5 @@
 }
 
 .icon-2 {
-    margin-left: 20px; 
+    margin-left: 18px; 
 }

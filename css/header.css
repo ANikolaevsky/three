@@ -8,17 +8,36 @@
     right: 18px;
     float: left;
     padding: 8px 8px 8px 18px;
-    background: rgb(255, 255, 255);
     border-radius: 3px;
     z-index: 1;
     opacity: .8;
 }
 
+.products {
+    position: absolute; /* Убираем из flex-потока, чтобы ширина логотипа и кнопки не сдвигала меню */
+    left: 50%;
+    transform: translateX(-50%); /* Центр блока ровно по центру шапки (а значит и экрана) */
+    padding: 8px 8px 8px 8px;
+    background: rgb(255, 255, 255);
+    border-radius: 5px;
+}
+
+.back {
+    padding: 18px 18px;
+    float: right;
+    color: rgb(30, 30, 30);
+    border-radius: 5px;
+    background: rgb(230, 230, 230);
+
+    &:hover {
+    background: rgb(255, 255, 255);
+    }
+}
+
 .logo-icon {
     display: block;
-    height: 22px;
+    height: 24px;
     align-items: center;
-    margin-left: 8px;
     cursor: pointer;
     opacity: 1;
 }
@@ -28,6 +47,10 @@ a {
 }
 
 .icon-3 {
-    margin-left: 20px;
-    margin-right: 6px;
+    margin-left: 18px;
+    
+}
+
+#products .button, #products .active {
+    padding: 10px 12px;
 }

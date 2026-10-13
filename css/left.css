@@ -14,38 +14,3 @@
     margin-right: 0; /* Отменяем отступ справа от .buttons:not(:last-of-type) */
     };
 }
-
-#assembly {
-    padding: 18px 18px;
-    float: left;
-    border-radius: 6px;
-    background: rgb(230, 230, 230);
-
-    &:hover {
-    background: rgb(255, 255, 255);
-    }
-}
-
-.icon {
-    margin-right: 15px; 
-}
-
-#metall, #textile, #scene {
-    background: rgb(230, 230, 230);
-}
-
-#metall li, #textile li, #scene li {
-    background: rgb(230, 230, 230);
-
-    &:hover {
-    background: rgb(250, 250, 250);
-    }
-
-    &.label:hover {
-    background: rgb(230, 230, 230);
-    }
-
-    &.active {
-    background: rgb(250, 250, 250);
-    }
-}
