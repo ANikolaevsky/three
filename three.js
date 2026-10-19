@@ -12,6 +12,17 @@
 // const hemiLight = new THREE.HemisphereLight(0x0099ff, 0xaa5500)
 // scene.add(hemiLight)
 
+// Точечный свет
+
+// const pointLight = new THREE.PointLight('rgb(238, 238, 236)', 10, 10)
+// pointLight.position.set(2, 1, 2)
+// pointLight.castShadow = true
+// pointLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
+// pointLight.shadow.camera.far = 10 // Макс расстояние отбрасывания теней
+// pointLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
+// pointLight.shadow.radius = 1 // Мягкость теней
+// scene.add(pointLight)
+
 // Куб
 
 // const tempVector = new THREE.Vector3(-1, 0.15, 0) // Если хотим присваивать значение координат много раз
@@ -89,3 +100,7 @@
 //         scene.remove(s1)
 //     })
 // })
+
+// Композер
+
+// composer.render()

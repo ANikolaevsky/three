@@ -1,13 +1,14 @@
 @import "header.css";
 @import "footer.css";
 @import "left.css";
+@import "right.css";
 
 @font-face {
     font-family: 'DINPro';
     src: url('../fonts/DINPro-Bold.woff') format('woff'),
          url('../fonts/DINPro-Bold.ttf') format('truetype');
     font-weight: 700;
-    font-style: normal;
+    font-style: bold;
     font-display: swap;
 }
 
@@ -25,7 +26,7 @@
     src: url('../fonts/DINPro-Light.woff') format('woff'),
          url('../fonts/DINPro-Light.ttf') format('truetype');
     font-weight: 300;
-    font-style: normal;
+    font-style: light;
     font-display: swap;
 }
 
@@ -73,17 +74,20 @@ html, body {
 
 .active {
     padding: 10px 8px;
-    background: rgb(240, 240, 240);
+    background: rgb(235, 235, 235);
     color: rgb(1, 1, 1);
     border: 0px solid #fff;
     border-radius: 3px;
     cursor: pointer;
-    transition: all .25s ease;
     opacity: 1;
     float: left; 
         
     &:not(:last-of-type) {
     margin-right: 6px;
+    }
+
+    &:active {
+    background: rgb(230, 230, 230);
     }
 }
 
@@ -105,5 +109,9 @@ html, body {
 
     &:hover {
     background: rgb(240, 240, 240);
+    }
+
+    &:active {
+    background: rgb(230, 230, 230);
     }
 }

@@ -14,3 +14,31 @@
     margin-right: 0; /* Отменяем отступ справа от .buttons:not(:last-of-type) */
     };
 }
+
+.left #series {
+    background: rgb(230, 230, 230);
+}
+
+.left #series li {
+    background: rgb(230, 230, 230);
+
+    &:hover {
+    background: rgb(245, 245, 245);
+    }
+
+    &:active {
+    background: rgb(255, 255, 255);
+    }
+
+    &.label:hover {
+    background: rgb(230, 230, 230);
+    }
+
+    &.active {
+    background: rgb(250, 250, 250);
+    }
+
+    &.active:active {
+    background: rgb(255, 255, 255);
+    }
+}

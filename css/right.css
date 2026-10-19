@@ -1,0 +1,49 @@
+.right {
+    position: fixed;
+    display: flex;
+    z-index: 1;
+    right: 32px;
+    font-size: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgb(68, 68, 68);
+    flex-direction: column; /* Блоки друг под другом, а не в строку */
+    align-items: flex-end; /* Блоки прижаты к правому краю, ширина по содержимому */
+    gap: 26px; /* Отступ между прямыми детьми (блоками h2 и dl)*/
+}
+
+.right h2 {
+    font-weight: 400;
+    font-size: 20px;
+}
+
+dt {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+dd {
+    font-size: 12px;
+}
+
+.specs {
+    display: flex;
+    flex-direction: column; /* Строки характеристик друг под другом */
+    align-items: flex-end; /* Строки прижаты к правому краю */
+    gap: 12px; /* Отступ между строками */
+}
+
+.specs div {
+    display: flex; /* Название и значение в одну строку */
+    gap: 12px; /* Пробел между названием, тире и значением */
+}
+
+.specs dt {
+    display: flex; /* Текст названия и тире становятся flex-элементами, и между ними тоже работает gap */
+    gap: 12px;
+}
+
+.specs dt::after {
+    content: '—'; /* Тире рисуем стилями, чтобы не набирать его в разметке */
+    font-weight: 300; /* Псевдоэлемент наследует 400 от dt: правило * на него не действует */
+}
