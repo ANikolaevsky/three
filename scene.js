@@ -101,6 +101,15 @@ const updateLightTween = () => {
     if (t === 1) lightTween.active = false
 }
 
+// АНИМАЦИЯ ВРАЩЕНИЯ
+
+// Группа для анимации вращения
+export const turntable = new THREE.Group() // Все модели кладём сюда, чтобы вращать разом
+scene.add(turntable)
+
+const timer = new THREE.Timer() // Объект для анимации
+timer.connect(document) // Пока вкладка скрыта, время не накапливается, и после возврата модель не прыгнет
+
 // КАМЕРА
 
 const camera = new THREE.PerspectiveCamera(
@@ -131,7 +140,7 @@ document.addEventListener('gestureend', preventGesture)
 
 controls.target.set(0, .3, 0) // Чтоб модель была чуть ниже на экране. Камера не сдвинута, но смотрит чуть выше модели
 
-// Плавный возврат камеры в изначальное положение (МАГИЯ)
+// ВОЗВРАТ КАМЕРЫ В ДЕФОЛТНОЕ ПОЛОЖЕНИЕ
 // Двигаем камеру не по прямой, а по дуге вокруг цели (сферические координаты):
 
 const cameraHome = {
@@ -139,7 +148,7 @@ const cameraHome = {
     spherical: new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)) // (-4, 3.1, 12) относительно цели
 }
 
-// Куда возвращать камеру: М9 (T4) шире остальных моделей, поэтому для неё камера дальше
+// Куда возвращать камеру: С5 (T4) шире остальных моделей, поэтому для неё камера дальше
 export const setCameraHome = (position) => {
 cameraHome.spherical.setFromVector3(new THREE.Vector3().copy(position).sub(cameraHome.target))
 }
@@ -155,16 +164,23 @@ const cameraTween = {
     fromTarget: new THREE.Vector3(),
     fromSpherical: new THREE.Spherical(),
     spherical: new THREE.Spherical(), // Промежуточное значение на каждом кадре
-    offset: new THREE.Vector3()
+    offset: new THREE.Vector3(),
+    fromRotation: 0 // Угол turntable в момент нажатия — его плавно возвращаем в 0
 }
 
+let isDragging = false // Пользователь схватил модель — вращение останавливается до переключения на другую модель
+
 export const resetCamera = () => {
+    isDragging = false // Новая модель — вращение запускается снова
     cameraTween.fromTarget.copy(controls.target)
     cameraTween.fromSpherical.setFromVector3(cameraTween.offset.copy(camera.position).sub(controls.target))
 
     // Поворачиваем по короткой стороне, а не через полный оборот
     const dTheta = cameraHome.spherical.theta - cameraTween.fromSpherical.theta
     cameraTween.fromSpherical.theta += Math.round(dTheta / (Math.PI * 2)) * Math.PI * 2
+
+    // Модель тоже довращаем в исходное положение по короткой стороне (угол приводим к диапазону -180°…180°)
+    cameraTween.fromRotation = THREE.MathUtils.euclideanModulo(turntable.rotation.y + Math.PI, Math.PI * 2) - Math.PI
     cameraTween.startTime = performance.now()
     cameraTween.active = true
 }
@@ -182,10 +198,15 @@ const updateCameraTween = () => {
     )
     controls.target.lerpVectors(cameraTween.fromTarget, cameraHome.target, eased)
     camera.position.setFromSpherical(cameraTween.spherical).add(controls.target)
+    turntable.rotation.y = THREE.MathUtils.lerp(cameraTween.fromRotation, 0, eased)
     if (t === 1) cameraTween.active = false
 }
 
-controls.addEventListener('start', () => { cameraTween.active = false }) // Пользователь схватил камеру — отменяем возврат
+controls.addEventListener('start', () => {
+    cameraTween.active = false // Пользователь схватил камеру — отменяем возврат
+    isDragging = true
+})
+// controls.addEventListener('end', () => { isDragging = false }) // Отпустил — вращение продолжается
 
 // Плоскость
 
@@ -223,11 +244,13 @@ renderer.setSize(config.sizes.width, config.sizes.height)
 
 // АНИМИРОВАНИЕ И УПРАВЛЕНИЕ
 
-function animate() {
+function animate(timestamp) {
+    timer.update(timestamp) // Обновляем таймер раз за кадр
+    const delta = timer.getDelta() // Секунды с прошлого кадра
     updateCameraTween() // До controls.update(), чтобы орбит подхватил новую позицию
     updateLightTween()
     controls.update() // Постоянно обновляет орбит
-    // loader.rotation.y -= THREE.MathUtils.degToRad(.05) // Постоянная анимация вращения
+    if (!cameraTween.active && !isDragging) turntable.rotation.y -= THREE.MathUtils.degToRad(2) * delta // 2° в секунду; пауза на время возврата камеры и пока модель держат
     requestAnimationFrame(animate) // Бесконечно вызывает функцию и синхронизируется с частотой экрана
     renderer.render(scene, camera)
 }

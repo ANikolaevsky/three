@@ -31,12 +31,12 @@ const t2Parts = {} // Вытаскиваем все узлы сборки по �
 // Когда модель подгружена с взаимозаменяемыми узлами на одинаковых координатах
 
 export const t2TopsM4 = ['Node3', 'Node4'] // Указываем, какие узлы на какие могут меняться
-export const t2TopsM5 = ['Node8', 'Node7'] 
+export const t2TopsC1 = ['Node8', 'Node7'] 
 
 const t3Parts = {}
 
-export const t3TopsM7 = ['Node2', 'Node3']
-export const t3TopsM8 = ['Node10', 'Node9']
+export const t3TopsC3 = ['Node2', 'Node3']
+export const t3TopsC4 = ['Node10', 'Node9']
 
 // Присваиваем сменяемый материал некоторым узлам из модели
 // Вытаскиваем массив узлов подушек из модели. Остальным просто присвоем другой материал
@@ -110,5 +110,5 @@ const inSofa = ['mr2', 'ml2', 'tb', 'mf', 'mg', 'mg2', 's1Left', 's1Right', 's2'
 inSofa.forEach(key => sofa.add(models[key]))
 
 // Альтернативные детали по умолчанию скрыты
-setT2Tops(t2TopsM4, t2TopsM5)
-setT3Tops(t3TopsM7, t3TopsM8)
+setT2Tops(t2TopsM4, t2TopsC1)
+setT3Tops(t3TopsC3, t3TopsC4)
