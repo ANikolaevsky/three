@@ -10,11 +10,11 @@
     opacity: .8;
 }
 
-#metall, #textile, #scene {
+#metall, #textile, #textile-tent, #scene {
     background: rgb(230, 230, 230);
 }
 
-#metall li, #textile li, #scene li {
+#metall li, #textile li, #textile-tent li, #scene li {
     background: rgb(230, 230, 230);
 
     &:hover {

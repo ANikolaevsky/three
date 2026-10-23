@@ -19,83 +19,135 @@
             <img class="icon-3" src="img/3.svg">
         </a>
     </header>
-    <div class="left">
-        <ul class="buttons" id="series">
-            <li class="label">Серия</li>
-            <li class="active">Мягкая</li>
-            <li class="button">Компактная</li>
-            <li class="button">Бескаркасная</li>
-        </ul>
-        <ul class="buttons" id="chairs">
-            <li class="label">Кресла</li>
-            <li class="active">М1</li>
-            <li class="button">М2</li>
-            <li class="button">М3</li>
-            <li class="button">М4</li>
-        </ul>
-        <ul class="buttons" id="tables">
-            <li class="label">Столики</li>
-            <li class="button">С1</li>
-            <li class="button">С2</li>
-            <li class="button">С3</li>
-        </ul>
 
-        <ul class="buttons" id="tables2">
-            <li class="label">Столы</li>
-            <li class="button">С4</li>
-            <li class="button">С5</li>
-            <li class="button">С6</li>
-        </ul>
+    <div id="furniture">
+        <div class="left">
+            <ul class="buttons" id="series">
+                <li class="label">Серия</li>
+                <li class="active">Мягкая</li>
+                <li class="button">Компактная</li>
+                <li class="button">Бескаркасная</li>
+            </ul>
+            <ul class="buttons" id="chairs">
+                <li class="label">Кресла</li>
+                <li class="active">М1</li>
+                <li class="button">М2</li>
+                <li class="button">М3</li>
+                <li class="button">М4</li>
+            </ul>
+            <ul class="buttons" id="tables">
+                <li class="label">Столики</li>
+                <li class="button">С1</li>
+                <li class="button">С2</li>
+                <li class="button">С3</li>
+            </ul>
+            <ul class="buttons" id="tables2">
+                <li class="label">Столы</li>
+                <li class="button">С4</li>
+                <li class="button">С5</li>
+                <li class="button">С6</li>
+            </ul>
+            <ul class="buttons" id="complects">
+                <li class="label">Комплекты</li>
+                <li class="button">4.1</li>
+                <li class="button">5.2</li>
+                <li class="button">7.3</li>
+            </ul>
+        </div>
 
-        <ul class="buttons" id="complects">
-            <li class="label">Комплекты</li>
-            <li class="button">4.1</li>
-            <li class="button">5.2</li>
-            <li class="button">7.3</li>
-        </ul>
-    </div>
-
-    <div class="right">
+        <div class="right">
             <dl class="specs">
                 <div><dt></dt><dd></dd></div>
             </dl>
             <div><h2>25 000 ₽</h2></div>
+        </div>
+
+        <div class="footer-block">
+            <ul class="buttons" id="metall">
+                <li class="label">Каркас</li>
+                <li class="active" id="black-lacquer">Черный</li>
+                <li class="button" id="brown-lacquer">Рыжий</li>
+                <li class="button" id="white-lacquer">Белый</li>
+                <li class="button" id="zinc">Цинк</li>
+            </ul>
+            <ul class="buttons" id="textile">
+                <li class="label">Ткань</li>
+                <li class="active" id="beige">Бежевая</li>
+                <li class="button" id="grey">Серая</li>
+                <li class="button" id="black">Черная</li>
+                <li class="button" id="white">Белая</li>
+                <li class="button" id="blue">Синяя</li>
+            </ul>
+            <ul class="buttons" id="scene">
+                <li class="label">Сцена</li>
+                <li class="active">Нет</li>
+                <li class="button">Бетон</li>
+                <li class="button">Трава</li>
+                <li class="button">Паркет</li>
+            </ul>
+        </div>
+        <div class="footer-left">
+            <button class="button" id="decompose">
+                <img class="icon" src="img/1.svg">
+                <span class="assembly-label">Разобрать</span>
+            </button>
+            <button class="button" id="assembly">
+                <img class="icon" src="img/1.svg">
+                <span class="assembly-label">Сложить</span>
+            </button>
+        </div>
+    </div>
+    
+    <div id="tents">
+        <div class="left">
+            <ul class="buttons" id="dimentins">
+                <li class="label">Размер</li>
+                <li class="active">3,0x3,0</li>
+                <li class="button">3,0x4,5</li>
+                <li class="button">3,0x6,0</li>
+                <li class="button">4,0x4,0</li>
+                <li class="button">4,0x6,0</li>
+                <li class="button">4,0x8,0</li>
+            </ul>
+            <ul class="buttons" id="walls">
+                <li class="label">Стены</li>
+                <li class="active">Одна</li>
+                <li class="button">Две</li>
+                <li class="button">Три</li>
+                <li class="button">Четыре</li>
+            </ul>
+            <ul class="buttons" id="tent-options">
+                <li class="label">Опции</li>
+                <li class="button">Модульный пол</li>
+                <li class="button">Модульный свет</li>
+                <li class="button">Потолок</li>
+                <li class="button">Утяжелители</li>
+            </ul>
+            <ul class="buttons" id="tent-brending">
+                <li class="label">Брендинг</li>
+                <li class="button">Печать на крыше</li>
+                <li class="button">Печать на стенах</li>
+            </ul>
+        </div>
+        <div class="footer-block">
+            <ul class="buttons" id="textile-tent">
+                <li class="label">Ткань</li>
+                <li class="active" id="beige">Бежевая</li>
+                <li class="button" id="grey">Серая</li>
+                <li class="button" id="black">Черная</li>
+                <li class="button" id="white">Белая</li>
+                <li class="button" id="blue">Синяя</li>
+            </ul>
+            <ul class="buttons" id="scene">
+                <li class="label">Сцена</li>
+                <li class="active">Нет</li>
+                <li class="button">Бетон</li>
+                <li class="button">Трава</li>
+                <li class="button">Паркет</li>
+            </ul>
+        </div>
     </div>
 
-    <div class="footer-block">
-        <ul class="buttons" id="metall">
-            <li class="label">Каркас</li>
-            <li class="active" id="black-lacquer">Черный</li>
-            <li class="button" id="brown-lacquer">Рыжий</li>
-            <li class="button" id="white-lacquer">Белый</li>
-            <li class="button" id="zinc">Цинк</li>
-        </ul>
-        <ul class="buttons" id="textile">
-            <li class="label">Ткань</li>
-            <li class="active" id="beige">Бежевая</li>
-            <li class="button" id="grey">Серая</li>
-            <li class="button" id="black">Черная</li>
-            <li class="button" id="white">Белая</li>
-            <li class="button" id="blue">Синяя</li>
-        </ul>
-        <ul class="buttons" id="scene">
-            <li class="label">Сцена</li>
-            <li class="active">Нет</li>
-            <li class="button">Бетон</li>
-            <li class="button">Трава</li>
-            <li class="button">Паркет</li>
-        </ul>
-    <div class="footer-left">
-        <button class="button" id="decompose">
-            <img class="icon" src="img/1.svg">
-            <span class="assembly-label">Разобрать</span>
-        </button>
-        <button class="button" id="assembly">
-            <img class="icon" src="img/1.svg">
-            <span class="assembly-label">Сложить</span>
-        </button>
-    </div>
-    </div>
     <div class="footer-right">
         <button class="button" id="action">
             <span class="footer-right-label">Сделать заказ</span>

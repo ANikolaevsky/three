@@ -126,7 +126,11 @@ controls.dampingFactor = .05 // Степень плавности
 controls.screenSpacePanning = false
 controls.enableZoom = false // Отключение зума
 controls.minPolarAngle = 0 // Можно смотреть строго сверху (+90°)
-controls.maxPolarAngle = THREE.MathUtils.degToRad(85) // Ниже 5° от горизонта опуститься нельзя
+
+// Насколько низко можно опустить камеру. 85° — чуть выше горизонта, больше 90° — можно заглянуть снизу. Каждый раздел задаёт свой угол в enter()
+export const setMaxPolarAngle = (degrees) => {
+    controls.maxPolarAngle = THREE.MathUtils.degToRad(degrees)
+}
 
 // Блокируем зум страницы браузером
 window.addEventListener('wheel', (event) => {
@@ -148,14 +152,19 @@ const cameraHome = {
     spherical: new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)) // (-4, 3.1, 12) относительно цели
 }
 
-// Куда возвращать камеру: С5 (T4) шире остальных моделей, поэтому для неё камера дальше
-export const setCameraHome = (position) => {
-cameraHome.spherical.setFromVector3(new THREE.Vector3().copy(position).sub(cameraHome.target))
+export const cameraTargetDefault = cameraHome.target.clone() // (0, .3, 0)
+export const cameraTargetRoof = new THREE.Vector3(0, 1.5, 0) // Крыша висит на высоте 2,2–3,9 м — смотрим в её середину
+
+// Куда возвращать камеру и куда она смотрит: С5 (T4) шире остальных моделей, поэтому для неё камера дальше
+export const setCameraHome = (position, target = cameraTargetDefault) => {
+    cameraHome.target.copy(target)
+    cameraHome.spherical.setFromVector3(new THREE.Vector3().copy(position).sub(target))
 }
 
 export const cameraHomeDefault = new THREE.Vector3(-4, 3.2, 10)
 export const cameraHomeFar = new THREE.Vector3(-4.5, 3.5, 11)
 export const cameraHomeFar2 = new THREE.Vector3(-5, 11, 11)
+export const cameraHomeRoof = new THREE.Vector3(-20, 10, 30) // Крыша 4×4 м — камера заметно дальше и выше
 
 const cameraTween = {
     active: false,
@@ -183,6 +192,16 @@ export const resetCamera = () => {
     cameraTween.fromRotation = THREE.MathUtils.euclideanModulo(turntable.rotation.y + Math.PI, Math.PI * 2) - Math.PI
     cameraTween.startTime = performance.now()
     cameraTween.active = true
+}
+
+// Мгновенно ставим камеру в cameraHome, без полёта — для смены разделов, где точки слишком далеко друг от друга
+export const jumpCamera = () => {
+    isDragging = false // Вращение запускается сразу
+    cameraTween.active = false // Отменяем полёт, если его успела запустить кнопка модели
+    controls.target.copy(cameraHome.target)
+    camera.position.setFromSpherical(cameraHome.spherical).add(controls.target)
+    turntable.rotation.y = 0 // Модель в исходном положении, как после обычного возврата
+    controls.update() // Орбит сразу принимает новую позицию
 }
 
 const updateCameraTween = () => {

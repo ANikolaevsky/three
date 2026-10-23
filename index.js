@@ -1,260 +1,42 @@
 import './css/style.css'
 import { Pane } from 'tweakpane'
-import { showSpecs } from './specs.js'
+import { devMode } from './config.js'
+import { metallMaterial, metallMaterial2, softMaterial, softMaterial2, softMaterial3 } from './textures.js'
+import { furniture } from './furniture.js'
+import { tents } from './tents.js'
+import { jumpCamera } from './scene.js'
 
-import {
-    metallMaterial, metallMaterial2, metallMaterial3, metallMaterial4,
-    softMaterial, softMaterial2, softMaterial3, softMaterial4, softMaterial5
-} from './textures.js'
+// index.js ->  Переключает разделы furniture.js и tents.js
+// furniture.js и tents.js -> Обрабатывают события своих разделов и обращаются к scene.js и models.js
+// models.js -> Собирает модели с текстурами из textures.js
+// scene.js -> Собирает всю сцену, камеру, свет, orbitControls, Animate
 
-import { models, sofa, state, setT2Tops, setT3Tops, t2TopsM4, t2TopsC1, t3TopsC3, t3TopsC4 } from './models.js'
-import { devMode, config } from './config.js'
+// ПЕРЕКЛЮЧЕНИЕ РАЗДЕЛОВ
 
-import {
-    scene, dirLight, pointLight3, pointLight4,
-    setShadowArea, movePointLight2, pointLight2Default, pointLight2Far,
-    setCameraHome, cameraHomeDefault, cameraHomeFar, cameraHomeFar2, resetCamera
-} from './scene.js'
-
-import { turntable } from './scene.js'
-
-// Цепочка строго: config.js  ←  scene.js  ←  index.js  →  models.js  →  textures.js
-
-
-// СОЕДИНЕНИЕ scene.js, models.js, textures.js и config.js
-
-const { mr, mr2, ml, ml2, s1Left, s1Right, s3, s4, t2, t3, t4, t5, a73, a74 } = models
-turntable.add(sofa) 
-
-//  ОБРАБОТКА СОБЫТИЙ
-
-// СБОРКА МАТЕРИАЛОВ
-
-// sofa, mr, mr2, ml, ml2, s3, s4, t2 могут быть не в сцене, поэтому обходим их отдельно
-const replaceMaterial = (from, to) => {
-    const objects = [scene, sofa, mr, mr2, ml, ml2, s3, s4, t2, t3, t4, t5, a73, a74]
-    objects.forEach(object => {
-        object?.traverse((node) => {
-            if (node.isMesh && node.material === from && !node.userData.fixedMaterial) node.material = to
-        })
-    })
+const sections = { // Просто присваиваем импортированные разделы одному объекту, чтоб по ключам обращаться к ним
+    'Модульная мебель': furniture,
+    'Мобильные шатры': tents
 }
 
-// Заменяем текущий материал на выбранный
+let current = furniture // Назначаем переменную для открытого сейчас раздела
 
-const setMetallMaterial = (to) => { // Функция смены простая
-    replaceMaterial(state.metall, to)
-    state.metall = to // Теперь новый материал это каррентМатериал
-}
+tents.exit() // Прячем разметку остальных разделов
+furniture.enter() // Вызываем раздел по умолчанию
 
-const setSoftMaterial = (to) => {
-    replaceMaterial(state.soft, to)
-    state.soft = to
-    // Условие для softMaterial4. Свет слабее, для остальных тканей — значение из конфига.
-    dirLight.intensity = to === softMaterial4 ? 3 : config.lighting.directionalIntensity
-}
+const productButtons = document.querySelectorAll('#products li') // Вытаскиваем кнопки из DOM
 
-// Сам сборщик материалов и модулей
+productButtons.forEach(li => { // Вешаем на каждую кнопку в products обработчик событий
+    li.addEventListener('click', () => {
+        const next = sections[li.textContent.trim()] // Обращаемся к свойству объекта по названию выбранной кнопки
+        if (!next || next === current) return // Раздела ещё нет или клик по уже открытому разделу
 
-const bindGroup = (items, onSelect) => {
-    items.forEach(([button, material]) => {
-        button.addEventListener('click', () => { 
-            onSelect(material)
-            items.forEach(([other]) => other.className = 'button')
-            button.className = 'active'
-        })
-    })
-}
+        productButtons.forEach(other => other.className = 'button') // Переназначаем классы
+        li.className = 'active'
 
-// Вызываем функцию сборщика, не делая доп.переменных для кнопок
-
-bindGroup([ 
-    [document.getElementById('zinc'), metallMaterial],
-    [document.getElementById('black-lacquer'), metallMaterial2],
-    [document.getElementById('brown-lacquer'), metallMaterial3],
-    [document.getElementById('white-lacquer'), metallMaterial4]
-], setMetallMaterial)
-
-bindGroup([
-    [document.getElementById('beige'), softMaterial],
-    [document.getElementById('grey'), softMaterial2],
-    [document.getElementById('black'), softMaterial3],
-    [document.getElementById('white'), softMaterial4],
-    [document.getElementById('blue'), softMaterial5]
-], setSoftMaterial)
-
-// ПЕРЕКЛЮЧЕНИЕ МОДУЛЕЙ
-
-// Сложить / Разложить: комплект 7.3 меняется на сложенный вариант a74 и обратно
-
-const assembly = document.getElementById('assembly') // Присваиваем переменной кнопку по ID из DOM
-const assemblyLabel = assembly.querySelector('.assembly-label') // Текст отдельно, чтобы не затирать иконку
-
-let isFolded = false
-
-// Только состояние и текст кнопки, модели меняет обработчик клика
-const setFolded = (folded) => {
-    isFolded = folded
-    assemblyLabel.textContent = folded ? 'Разложить' : 'Сложить'
-}
-
-assembly.addEventListener('click', () => {
-    // Кнопка работает только когда на сцене комплект 7.3 в любом из вариантов
-    const isComplect = (a73 && a73.parent === turntable) || (a74 && a74.parent === turntable)
-    if (!isComplect || !a73 || !a74) return
-
-    setFolded(!isFolded)
-
-    if (isFolded) {
-        turntable.remove(a73)
-        turntable.add(a74)
-        movePointLight2(pointLight2Default) // Сложенный комплект меньше, свет возвращаем на обычное место
-        setCameraHome(cameraHomeDefault) // Камера как у С3 и С6
-        setShadowArea(config.shadows.areaSmall) // Сложенный комплект помещается в обычную область теней
-    } else {
-        turntable.remove(a74)
-        turntable.add(a73)
-        movePointLight2(pointLight2Far)
-        setCameraHome(cameraHomeFar2) // Камера разложенного комплекта 7.3
-        setShadowArea(config.shadows.areaLarge)
-    }
-    resetCamera()
-})
-
-// У столов (С1–С6) нет подушек, поэтому блок выбора ткани для них скрываем
-const textile = document.getElementById('textile')
-const modulesWithoutTextile = ['С1', 'С2', 'С3', 'С4', 'С5', 'С6']
-
-// Кресла и Столы — одна общая группа: на сцене всегда одна модель, поэтому активна только одна кнопка из обеих
-const moduleButtons = document.querySelectorAll('#chairs li:not(.label), #tables li:not(.label), #tables2 li:not(.label), #complects li:not(.label)')
-
-showSpecs('М1') // Спецификация модели по дефолту
-
-moduleButtons.forEach(li => {
-    li.addEventListener('click', () => { // Один обработчик для всех кнопок
-        moduleButtons.forEach(other => other.className = 'button')
-        li.className = 'active' // Класс, меняющий фон кнопки
-
-        const name = li.textContent.trim()
-
-        showSpecs(name) // Изменение спецификации из specs.js
-
-        textile.style.display = modulesWithoutTextile.includes(name) ? 'none' : ''
-
-        if (name === '7.3') setCameraHome(cameraHomeFar2)
-        else if (name === 'С6' || name === 'С3') setCameraHome(cameraHomeFar)
-        else setCameraHome(cameraHomeDefault)
-
-        setShadowArea(name === '7.3' ? config.shadows.areaLarge : config.shadows.area)
-        movePointLight2(name === '7.3' ? pointLight2Far : pointLight2Default)
-        resetCamera()
-
-        // У объекта один родитель: scene.add(s1) забирает подушку из sofa, а sofa.add(s1) возвращает её в диван
-        if (s1Left) sofa.add(s1Left)
-        if (s1Right) sofa.add(s1Right)
-        // Комплект и его свет убираем при любой смене модели, ветка 7.3 добавит их обратно
-        if (a73) turntable.remove(a73)
-        if (a74) turntable.remove(a74)
-        scene.remove(pointLight3, pointLight4)
-        setFolded(false) // Новая модель всегда открывается разложенной
-
-        if (name === '7.3') {
-            turntable.remove(sofa)
-            if (t2) turntable.remove(t2)
-            if (t3) turntable.remove(t3)
-            if (t4) turntable.remove(t4)
-            if (t5) turntable.remove(t5)
-            if (a73) turntable.add(a73) // Модель вращается вместе с группой
-            scene.add(pointLight3, pointLight4) // Свет остаётся неподвижным в сцене
-            return
-        }
-
-        if (name === 'М4' || name === 'С1' || name === 'С2') {
-            turntable.remove(sofa)
-            if (t3) turntable.remove(t3)
-            if (t4) turntable.remove(t4)
-            if (t5) turntable.remove(t5)
-            if (t2) turntable.add(t2)
-            if (name === 'М4' || name === 'С1') setT2Tops(t2TopsM4, t2TopsC1)
-            if (name === 'С2') setT2Tops(t2TopsC1, t2TopsM4)
-            if (name === 'М4') {
-                if (s1Left) turntable.add(s1Left)
-                if (s1Right) turntable.add(s1Right)
-            }
-            return
-        }
-
-        if (name === 'С5' || name === 'С4') {
-            turntable.remove(sofa)
-            if (t2) turntable.remove(t2)
-            if (t4) turntable.remove(t4)
-            if (t5) turntable.remove(t5)
-            if (t3) turntable.add(t3)
-            if (name === 'С5') setT3Tops(t3TopsC4, t3TopsC3)
-            if (name === 'С4') setT3Tops(t3TopsC3, t3TopsC4)
-            return
-        }
-
-        if (name === 'С6') {
-            turntable.remove(sofa)
-            if (t2) turntable.remove(t2)
-            if (t3) turntable.remove(t3)
-            if (t5) turntable.remove(t5)
-            if (t4) turntable.add(t4)
-            return
-        }
-
-        if (name === 'С3') {
-            turntable.remove(sofa)
-            if (t2) turntable.remove(t2)
-            if (t3) turntable.remove(t3)
-            if (t4) turntable.remove(t4)
-            if (t5) turntable.add(t5)
-            return
-        }
-
-        if (name === 'С6') {
-            turntable.remove(sofa)
-            if (t2) turntable.remove(t2)
-            if (t3) turntable.remove(t3)
-            if (t5) turntable.remove(t5)
-            if (t4) turntable.add(t4)
-            return
-        }
-
-        // М1–М3: возвращаем диван, убираем t2
-        turntable.add(sofa)
-        if (t2) turntable.remove(t2)
-        if (t3) turntable.remove(t3)
-        if (t4) turntable.remove(t4)
-        if (t5) turntable.remove(t5)
-
-        if (name === 'М2') {
-            if (mr2) sofa.remove(mr2)
-            if (ml) sofa.remove(ml) // Сброс после М3
-            if (s4) sofa.remove(s4)
-            if (mr) sofa.add(mr)
-            if (s3) sofa.add(s3)
-            if (ml2) sofa.add(ml2)
-        }
-
-        if (name === 'М3') {
-            if (mr2) sofa.remove(mr2)
-            if (ml2) sofa.remove(ml2)
-            if (mr) sofa.add(mr)
-            if (ml) sofa.add(ml)
-            if (s3) sofa.add(s3)
-            if (s4) sofa.add(s4)
-        }
-
-        if (name === 'М1') {
-            if (mr) sofa.remove(mr)
-            if (mr2) sofa.add(mr2)
-            if (s3) sofa.remove(s3)
-            if (ml) sofa.remove(ml)
-            if (s4) sofa.remove(s4)
-            if (ml2) sofa.add(ml2)
-        }
+        current.exit() // Сначала целиком убираем старый раздел
+        current = next // Присваиваем в переменную новый выбранный раздел
+        current.enter() // Вызываем функцию этого раздела
+        jumpCamera() // enter() запускает плавный полёт к своей модели — заменяем его мгновенным переходом
     })
 })
 

@@ -15,11 +15,11 @@
     };
 }
 
-.left #series {
+.left #series, .left #dimentins {
     background: rgb(230, 230, 230);
 }
 
-.left #series li {
+.left #series li, .left #dimentins li {
     background: rgb(230, 230, 230);
 
     &:hover {
