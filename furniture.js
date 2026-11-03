@@ -1,12 +1,13 @@
 import { showSpecs } from './specs.js'
+import { bindGroup } from './buttons.js'
 import { metallMaterial, metallMaterial2, metallMaterial3, metallMaterial4,
-    softMaterial, softMaterial2, softMaterial3, softMaterial4, softMaterial5} from './textures.js'
+    softMaterial, softMaterial2, softMaterial3, softMaterial4, softMaterial5, softMaterial6, softMaterial7} from './textures.js'
 import { loadFurniture, sofa, state, setT2Tops, setT3Tops, t2TopsM4, t2TopsC1, 
     t3TopsC3, t3TopsC4 } from './models.js'
 import { config } from './config.js'
 import { scene, turntable, dirLight, pointLight3, pointLight4, setShadowArea, movePointLight2, 
     pointLight2Default, pointLight2Far, setCameraHome, cameraHomeDefault, cameraHomeFar,
-    cameraHomeFar2, resetCamera, setMaxPolarAngle } from './scene.js'
+    cameraHomeFar2, resetCamera, setMaxPolarAngle, moveDirLight, dirLightDefault } from './scene.js'
 
 // РАЗДЕЛ «МОДУЛЬНАЯ МЕБЕЛЬ»: модели, кнопки и переключение модулей
 
@@ -23,34 +24,28 @@ const replaceMaterial = (from, to) => {
     objects.forEach(object => {
         object?.traverse((node) => {
             if (node.isMesh && node.material === from && !node.userData.fixedMaterial) node.material = to
-        })
+        }) // Проверка означает «это ткань, если сейчас на ней текущая ткань».
     })
 }
 
-// Заменяем текущий материал на выбранный
+// ЗАМЕНА МАТЕРИАЛА
 
-const setMetallMaterial = (to) => { // Функция смены простая
+// Функция смены текущего материала металла на выбранный
+const setMetallMaterial = (to) => {
     replaceMaterial(state.metall, to)
     state.metall = to // Теперь новый материал это каррентМатериал
 }
 
+// Условие яркости основного света. Для светлой softMaterial4 свет слабее, для остальных — значение из конфига
+const setDirLightIntensity = () => {
+    dirLight.intensity = state.soft === softMaterial4 ? 3 : config.lighting.directionalIntensity
+}
+
+// Функция смены текущего материала ткани на выбранный
 const setSoftMaterial = (to) => {
     replaceMaterial(state.soft, to)
     state.soft = to
-    // Условие для softMaterial4. Свет слабее, для остальных тканей — значение из конфига.
-    dirLight.intensity = to === softMaterial4 ? 3 : config.lighting.directionalIntensity
-}
-
-// Сам сборщик материалов и модулей
-
-const bindGroup = (items, onSelect) => {
-    items.forEach(([button, material]) => {
-        button.addEventListener('click', () => { 
-            onSelect(material)
-            items.forEach(([other]) => other.className = 'button')
-            button.className = 'active'
-        })
-    })
+    setDirLightIntensity()
 }
 
 // Вызываем функцию сборщика, не делая доп.переменных для кнопок
@@ -67,12 +62,12 @@ bindGroup([
     [document.getElementById('grey'), softMaterial2],
     [document.getElementById('black'), softMaterial3],
     [document.getElementById('white'), softMaterial4],
-    [document.getElementById('blue'), softMaterial5]
+    [document.getElementById('blue'), softMaterial5],
+    [document.getElementById('red'), softMaterial6],
+    [document.getElementById('brown'), softMaterial7]
 ], setSoftMaterial)
 
-// ПЕРЕКЛЮЧЕНИЕ МОДУЛЕЙ
-
-// Сложить / Разложить: комплект 7.3 меняется на сложенный вариант a74 и обратно
+// СЛОЖИТЬ / РАЗЛОЖИТЬ
 
 const assembly = document.getElementById('assembly') // Присваиваем переменной кнопку по ID из DOM
 const assemblyLabel = assembly.querySelector('.assembly-label') // Текст отдельно, чтобы не затирать иконку
@@ -108,11 +103,13 @@ assembly.addEventListener('click', () => {
     resetCamera()
 })
 
-// У столов (С1–С6) нет подушек, поэтому блок выбора ткани для них скрываем
-const textile = document.getElementById('textile')
-const modulesWithoutTextile = ['С1', 'С2', 'С3', 'С4', 'С5', 'С6']
+// ПЕРЕКЛЮЧЕНИЕ МОДУЛЕЙ
 
-// Кресла и Столы — одна общая группа: на сцене всегда одна модель, поэтому активна только одна кнопка из обеих
+const textile = document.getElementById('textile') // Достаем блок с тканью
+const modulesWithoutTextile = ['С1', 'С2', 'С3', 'С4', 'С5', 'С6'] // Достаем кнопки столов (С1–С6)
+
+// Кресла и Столы — одна общая группа: на сцене всегда одна модель, 
+// поэтому активна только одна кнопка из обеих, делаем общий querySelector
 const moduleButtons = document.querySelectorAll('#chairs li:not(.label), #tables li:not(.label), #tables2 li:not(.label), #complects li:not(.label)')
 
 moduleButtons.forEach(li => {
@@ -122,17 +119,18 @@ moduleButtons.forEach(li => {
 
         const name = li.textContent.trim()
 
-        showSpecs(name) // Изменение спецификации из specs.js
+        showSpecs(name, 'furniture') // Изменение описания из specs.js
 
-        textile.style.display = modulesWithoutTextile.includes(name) ? 'none' : ''
+        // Скрываем блок выбора ткани при клике по столам
+        textile.style.display = modulesWithoutTextile.includes(name) ? 'none' : '' 
 
-        if (name === '7.3') setCameraHome(cameraHomeFar2)
+        if (name === '7.3') setCameraHome(cameraHomeFar2) // Положение камеры в зависимости от модели
         else if (name === 'С6' || name === 'С3') setCameraHome(cameraHomeFar)
         else setCameraHome(cameraHomeDefault)
 
-        if (name === '7.3') setShadowArea(config.shadows.areaLarge)
+        if (name === '7.3') setShadowArea(config.shadows.areaLarge) // Область тени для большой модели
         else setShadowArea(config.shadows.area)
-        movePointLight2(name === '7.3' ? pointLight2Far : pointLight2Default)
+        movePointLight2(name === '7.3' ? pointLight2Far : pointLight2Default) // Двигаем свет для большой модели
         resetCamera()
 
         // У объекта один родитель: scene.add(s1) забирает подушку из sofa, а sofa.add(s1) возвращает её в диван
@@ -243,6 +241,8 @@ export const furniture = {
     enter() { // enter срабатывает и выполняет то, что внутри, при открытии furniture
         section.style.display = '' // Показываем разметку раздела
         setMaxPolarAngle(85) // Ниже 5° от горизонта опуститься нельзя
+        moveDirLight(dirLightDefault)
+        setDirLightIntensity() // Другой раздел мог изменить яркость — возвращаем свою, по выбранной ткани
         moduleButtons[1].click() // А внутри click по кнопке М2 и её обработчик
     },
     exit() { // При выходе из furniture, убираем всё, что было в сцене, чтобы не мешать другим разделам

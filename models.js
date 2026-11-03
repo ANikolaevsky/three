@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js' // Декодер сжатия геометрии
-import { metallMaterial, metallMaterial2, softMaterial, roofMaterial, frameMaterial } from './textures.js'
+import { metallMaterial, metallMaterial2, softMaterial, roofMaterial, frameMaterial, windowMaterial, zipperMaterial, connectorMaterial, velcroOf } from './textures.js'
 
 export const state = { metall: metallMaterial2, soft: softMaterial } // Задаем стейт материалов по дефолту
 export const sofa = new THREE.Group() // Все модели кресел (М1–М3) лежат в одной группе, чтобы при выборе М4, они убирались разом
@@ -11,13 +11,13 @@ loader.setMeshoptDecoder(MeshoptDecoder) // Метод для сжатой ге�
 
 // ОБЩИЕ ПОМОЩНИКИ ДЛЯ МОДЕЛЕЙ
 
-// ПОСТОЯННЫЙ МАТЕРИАЛ ДЛЯ НЕКОТОРЫХ УЗЛОВ В СБОРКЕ 
+// НЕ ВЫБИРАЕМЫЙ МАТЕРИАЛ ДЛЯ НЕКОТОРЫХ УЗЛОВ В СБОРКЕ
 
 const isCap = (node) => node.geometry.attributes.position.count === 1182 // Вытаскиваем узел по его вершинам
 
 const setCapMaterial = (node) => {
     node.material = metallMaterial // Присваиваем
-    node.userData.fixedMaterial = true // Фиксируем материал. replaceMaterial будет пропускать эти узлы
+    node.userData.fixedMaterial = true // Метод фиксации материала. replaceMaterial будет пропускать эти узлы
 }
 
 // ВЗАИМОЗАМЕНЯЕМЫЕ УЗЛЫ В СБОРКЕ НА ОДИНАКОВЫХ КООРДИНАТАХ
@@ -85,14 +85,21 @@ const FURNITURE = {
 
 // Общая функция. Берет модель, назначает материал, масштаб, поворот, позицию.
 
-const loadModel = ({ url, pos, rot = [0, 180, 0], scale = .01, soft = false, softParts, caps = false, material, onMesh }) =>
+const loadModel = ({ url, pos, rot = [0, 180, 0], scale = .01, soft = false, softParts, caps = false, material, parts, onMesh }) =>
     new Promise((resolve) => {
         loader.load(url, (gltf) => {
             const root = gltf.scene
             root.traverse((node) => {
                 if (!node.isMesh) return
-                const isSoft = softParts ? softParts.has(node.name) : soft
-                node.material = isSoft ? state.soft : state.metall
+                if (parts) {
+                    // Модель из нескольких частей (шатёр): материал выбираем по имени узла, части не из списка оставляют свой.
+                    // Если у узла есть дети (стена с окном), сжатие переносит его меш в безымянный дочерний узел — тогда берём имя родителя
+                    node.material = parts[node.name] ?? parts[node.parent?.name] ?? node.material
+                    node.userData.fixedMaterial = true // replaceMaterial мебели их не меняет
+                } else {
+                    const isSoft = softParts ? softParts.has(node.name) : soft
+                    node.material = isSoft ? state.soft : state.metall
+                }
                 if (material) {
                     node.material = material // Свой материал модели
                     node.userData.fixedMaterial = true // replaceMaterial его не меняет
@@ -131,13 +138,42 @@ export const loadFurniture = async () => {
 
 // Не в FURNITURE: те грузятся сразу при старте, а шатры — только при первом клике в разделе «Мобильные шатры»
 
-// Название кнопки размера → модель. Остальные размеры добавим, когда появятся модели
-const TENTS = {
-    '4,0x4,0': { url: './models/compressed/roof_4x4.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, material: roofMaterial } // Модель уже в метрах, материал свой
+// Шатёр — одна модель со всеми частями: каркас (Frame), крыша (Roof) и стены отдельными узлами
+// (Wall_Left −x, Wall_Right +x, Wall_Back −z, Wall_Front +z). Какие стены видны, решает tents.js
+// Материалов в модели нет, поэтому назначаем их по именам узлов. UV у ткани развёрнуты в Blender
+
+// Настройка частей шатра после загрузки: ткань помечаем для кнопок «Ткань» в tents.js, окнам — свои тень и порядок отрисовки
+const setupTentMesh = (mesh) => {
+    if (mesh.material === roofMaterial) mesh.userData.fabric = true
+    if (mesh.material === velcroOf.get(roofMaterial)) mesh.userData.fabric = mesh.userData.velcro = true // Липучки тоже красятся, но своим клоном ткани
+    if (mesh.material === windowMaterial) {
+        mesh.castShadow = false // Карта теней не учитывает opacity — прозрачное окно давало бы сплошную тень
+        mesh.renderOrder = 1 // Рисуем после ткани, иначе при некоторых поворотах крыша за окном перекрывает плёнку
+    }
 }
 
-const FRAMES = {
-    '4,0x4,0': { url: './models/compressed/frame_4x4.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, material: frameMaterial } // Модель уже в метрах, материал свой
+// Название кнопки размера → модель. Остальные размеры добавим, когда появятся модели
+const TENTS = {
+    '4,0x4,0': {
+        url: './models/compressed/tent_4x4.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, // Модель уже в метрах
+        parts: { 
+            Frame: frameMaterial, 
+            Roof: roofMaterial, 
+            Wall_Left: roofMaterial, 
+            Wall_Right: roofMaterial, 
+            Wall_Back: roofMaterial, 
+            Wall_Front: roofMaterial,
+            Frame_Connectors: connectorMaterial, 
+            Window_Left: windowMaterial, 
+            Window_Right: windowMaterial, 
+            Zippers_Front: zipperMaterial,
+            Velcro_Left: velcroOf.get(roofMaterial),
+            Velcro_Right: velcroOf.get(roofMaterial),
+            Velcro_Back: velcroOf.get(roofMaterial),
+            Velcro_Front: velcroOf.get(roofMaterial)
+ },
+        onMesh: setupTentMesh
+    }
 }
 
 const tentModels = {} // Загрузки шатров: каждый грузим один раз и запоминаем
@@ -145,11 +181,6 @@ const tentModels = {} // Загрузки шатров: каждый грузи�
 // Возвращает модель шатра по названию кнопки, или null, если модели для этого размера пока нет
 export const loadTent = (name) => {
     if (!TENTS[name]) return Promise.resolve(null)
-    // Тент и каркас грузятся параллельно и собираются в одну группу. Запоминаем сам Promise, чтобы два быстрых клика не загрузили модель дважды
-    tentModels[name] ??= Promise.all([loadModel(TENTS[name]), loadModel(FRAMES[name])]).then(parts => {
-        const tent = new THREE.Group()
-        tent.add(...parts)
-        return tent
-    })
+    tentModels[name] ??= loadModel(TENTS[name]) // Запоминаем сам Promise, чтобы два быстрых клика не загрузили модель дважды
     return tentModels[name]
 }

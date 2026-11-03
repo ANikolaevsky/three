@@ -1,3 +1,4 @@
+// СПЕЦИФИКАЦИЯ МЕБЕЛИ
 
 export const defaultSpecs = {
     'Время сборки': '1 минута',
@@ -35,14 +36,38 @@ export const prices = {
     '7.3': '195 000 ₽'
 }
 
-const specsList = document.querySelector('.specs')
-const priceTitle = document.querySelector('.right h2')
+// СПЕЦИФИКАЦИЯ ТЕНТОВ
 
-export const showSpecs = (name) => {
-    const rows = { ...defaultSpecs, ...specs[name] }
+export const defaultSpecsTents = {
+    'Время сборки': '5 минут',
+    'Стойки': 'Восьмигранные 44х40мм',
+    'Каркас' : 'Анодированный алюминий',
+    'Ткань': 'Oxford 600D',
+    'Ветровая нагрузка': 'до 16 м/с'
+}
+
+export const specsTents = {
+    '4,0x4,0': { 'Площадь': '16 м2', 'Вес': '50 кг', 'Вместимость': 'до 12 человек', 'Высота входа': '2,4 м' }
+}
+
+export const pricesTents = {
+    '4,0x4,0': '115 000 ₽'
+}
+
+// Данные каждого раздела. Ключ — id раздела в index.html, у каждого раздела свой блок .right
+const catalogs = {
+    furniture: { defaults: defaultSpecs, models: specs, modelPrices: prices },
+    tents: { defaults: defaultSpecsTents, models: specsTents, modelPrices: pricesTents }
+}
+
+export const showSpecs = (name, section) => {
+    const { defaults, models, modelPrices } = catalogs[section]
+    const specsList = document.querySelector(`#${section} .specs`)
+    const priceTitle = document.querySelector(`#${section} .right h2`)
+    const rows = { ...defaults, ...models[name] }
     specsList.innerHTML = Object.entries(rows)
         .filter(([, value]) => value)
         .map(([key, value]) => `<div><dt>${key}</dt><dd>${value}</dd></div>`)
         .join('')
-    priceTitle.textContent = prices[name] ?? '' // Цена выбранной модели
+    priceTitle.textContent = modelPrices[name] ?? '' // Цена выбранной модели
 }

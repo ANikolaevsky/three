@@ -6,7 +6,7 @@
     font-size: 16px;
     top: 50%;
     transform: translateY(-50%);
-    color: rgb(68, 68, 68);
+    color: var(--black-2);
     flex-direction: column; /* Блоки друг под другом, а не в строку */
     align-items: flex-end; /* Блоки прижаты к правому краю, ширина по содержимому */
     gap: 26px; /* Отступ между прямыми детьми (блоками h2 и dl)*/

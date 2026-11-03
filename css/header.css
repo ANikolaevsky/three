@@ -17,7 +17,7 @@
     left: 50%;
     transform: translateX(-50%); /* Центр блока ровно по центру шапки (а значит и экрана) */
     padding: 8px 8px 8px 8px;
-    background: rgb(255, 255, 255);
+    background: var(--grey-0);
     border-radius: 5px;
     opacity: .8;
 }
@@ -25,16 +25,16 @@
 .back {
     padding: 18px 18px;
     float: right;
-    color: rgb(30, 30, 30);
+    color: var(--black-1);
     border-radius: 5px;
-    background: rgb(230, 230, 230);
+    background: var(--grey-3);
 
     &:hover {
-    background: rgb(245, 245, 245);
+    background: var(--grey-2);
     }
 
     &:active {
-    background: rgb(255, 255, 255);
+    background: var(--grey-0);
     }
 }
 

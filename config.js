@@ -13,7 +13,12 @@ export const config = {
         areaSmall: 0.8 // Для сложенных комплектов (комплект 7.4)
     },
     lighting: {
-        directionalIntensity: 6
+        directionalIntensity: 5,
+        directionalIntensityTents: 3,
+        directionalIntensityTents2: 2,
+        directionalIntensityLamps: 1, // dirLight при включённых лампах шатра — будто вечер
+        environmentIntensity: .5, // Интенсивность окружения. Не освещения!
+        environmentIntensityTents: .25, // Окружение в разделе шатров
     },
     camera: {
         fov: 14,

@@ -16,29 +16,29 @@
 }
 
 .left #series, .left #dimentins {
-    background: rgb(230, 230, 230);
+    background: var(--grey-3);
 }
 
 .left #series li, .left #dimentins li {
-    background: rgb(230, 230, 230);
+    background: var(--grey-3);
 
     &:hover {
-    background: rgb(245, 245, 245);
+    background: var(--grey-1);
     }
 
     &:active {
-    background: rgb(255, 255, 255);
+    background: var(--grey-0);
     }
 
     &.label:hover {
-    background: rgb(230, 230, 230);
+    background: var(--grey-3);
     }
 
     &.active {
-    background: rgb(250, 250, 250);
+    background: var(--grey-1);
     }
 
     &.active:active {
-    background: rgb(255, 255, 255);
+    background: var(--grey-0);
     }
 }

@@ -2,11 +2,15 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { devMode, config } from './config.js'
+import { reduceVertices } from 'three/examples/jsm/utils/SceneUtils.js'
+import { frameMaterial } from './textures.js'
 
 // СЦЕНА
 
 export const scene = new THREE.Scene()
-scene.background = new THREE.Color('rgb(240, 240, 240)')
+export const backgroundDefault = new THREE.Color('rgb(240, 240, 240)')
+export const backgroundNight = new THREE.Color('rgb(38, 38, 38)') // Тёмный фон, когда в шатре включены лампы
+scene.background = backgroundDefault.clone() // Копия: фон потом меняется через copy(), а backgroundDefault должен остаться прежним
 const canvas = document.querySelector('canvas');
 
 // ОСИ И СЕТКИ
@@ -19,7 +23,7 @@ scene.add(gridHelper)
 
 // СВЕТ
 
-export const dirLight = new THREE.DirectionalLight('rgb(252, 250, 243)', config.lighting.directionalIntensity)
+export const dirLight = new THREE.DirectionalLight('rgb(251, 249, 240)', config.lighting.directionalIntensity)
 dirLight.position.set(1, 6, 1)
 dirLight.castShadow = true // Отбрасывание тени от этого источника
 dirLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
@@ -47,14 +51,21 @@ export const setShadowArea = (area) => {
 }
 setShadowArea(config.shadows.area)
 
-const pointLight = new THREE.PointLight('rgb(238, 238, 236)', 10, 10)
+// Второй направленный свет для шатров: подсвечивает сторону, куда не достаёт dirLight. Без тени. В сцену его добавляет tents.enter()
+export const dirLight2 = new THREE.DirectionalLight('rgb(250, 248, 238)', config.lighting.directionalIntensityTents2)
+dirLight2.position.set(-3, 2, -2)
+
+export const dirLightHelper2 = new THREE.DirectionalLightHelper(dirLight2, 2, 'red')
+scene.add(dirLightHelper2)
+
+export const pointLight = new THREE.PointLight('rgb(238, 238, 236)', 10, 10)
 pointLight.position.set(2, 1, 2)
 // scene.add(pointLight)
 
 const pointLightHelper = new THREE.PointLightHelper(pointLight, .1)
 scene.add(pointLightHelper)
 
-const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 15, 100)
+export const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 15, 100)
 pointLight2.position.set(-1.5, .5, -1.5) // Совпадает с pointLight2Default ниже
 scene.add(pointLight2)
 
@@ -76,6 +87,19 @@ scene.add(pointLightHelper4)
 // Позиции pointLight2 для комплекта 7.3 
 export const pointLight2Default = new THREE.Vector3(-1.5, .5, -1.5)
 export const pointLight2Far = new THREE.Vector3(-2.8, .8, -2.6)
+export const pointLight2Tents = new THREE.Vector3(3, 1, 3)
+
+// Позиции dirLight по разделам
+export const dirLightDefault = new THREE.Vector3(1, 6, 1) // Совпадает с dirLight.position выше
+export const dirLightTents = new THREE.Vector3(3, 6, 3)
+
+// Переставляет dirLight. Светит он всегда в центр сцены, меняется только позиция источника
+export const moveDirLight = (position) => {
+    dirLight.position.copy(position)
+    dirLight.updateMatrixWorld() // Хелперы берут позицию из матрицы, а она сама обновится только при рендере
+    dirLightHelper.update() // Без update хелперы в devMode остаются на старом месте
+    shadowHelper.update()
+}
 
 // Плавный переход pointLight2 на новую позицию (та же кривая, что у камеры)
 const lightTween = {
@@ -164,7 +188,7 @@ export const setCameraHome = (position, target = cameraTargetDefault) => {
 export const cameraHomeDefault = new THREE.Vector3(-4, 3.2, 10)
 export const cameraHomeFar = new THREE.Vector3(-4.5, 3.5, 11)
 export const cameraHomeFar2 = new THREE.Vector3(-5, 11, 11)
-export const cameraHomeRoof = new THREE.Vector3(-20, 10, 30) // Крыша 4×4 м — камера заметно дальше и выше
+export const cameraHomeRoof = new THREE.Vector3(-25, 10, 35) // Крыша 4×4 м — камера заметно дальше и выше
 
 const cameraTween = {
     active: false,
@@ -254,11 +278,16 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  
 renderer.outputColorSpace = THREE.SRGBColorSpace // Улучшенное и корректное отображение цветов
+
 // renderer.toneMapping = THREE.LinearToneMapping // Улучшение переходов и теней
+// renderer.toneMapping = THREE.NeutralToneMapping
 renderer.toneMapping = THREE.ACESFilmicToneMapping // Супер классный ToneMapping
+renderer.toneMappingExposure = 1 // Общая яркость сцены
+
 renderer.shadowMap.enabled = true // Добавление теней в рендеринг!
 // renderer.shadowMap.type = THREE.PCFShadowMap // Алгоритм сжатия теней
 renderer.shadowMap.type = THREE.PCFSoftShadowMap // Чтоб были супер мягкие тени
+
 renderer.setSize(config.sizes.width, config.sizes.height)
 
 // АНИМИРОВАНИЕ И УПРАВЛЕНИЕ
@@ -279,7 +308,8 @@ animate()
 
 const pmrem = new THREE.PMREMGenerator(renderer)
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
-scene.environmentIntensity = .3 // Сила освещения и отражений от окружения (фон не затрагивается)
+// frameMaterial.envMap = scene.environment // Тогда каркас получает силу окружения envMapIntensity напрямую, а не общую силу окружения сцены
+scene.environmentIntensity = config.lighting.environmentIntensity // Сила освещения и отражений от окружения (фон не затрагивается)
 
 // РЕСАЙЗ (РЕЗИНОВЫЙ КАНВАС)
 
@@ -295,7 +325,8 @@ window.addEventListener('resize', () => { // Вешаем обработку н�
 })
 
 if (!devMode) scene.remove(
-    dirLightHelper, 
+    dirLightHelper,
+    dirLightHelper2,
     pointLightHelper, 
     pointLightHelper2,
     pointLightHelper3, 
