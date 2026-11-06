@@ -7,7 +7,7 @@ const loadTexture = (path, isColor = false, scale = .01) => {
     const tex = textureLoader.load(path)
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping // Повторяет тектсуру
     tex.repeat.set(scale, scale) // Масштабилование техстуры. Одна плитка на 1 / scale единиц UV
-    tex.anisotropy = 8 // ЧТО ЭТО?
+    tex.anisotropy = 8 // Под острыми углами всё не уходит в кашу
     if (isColor) tex.colorSpace = THREE.SRGBColorSpace // Цветовые карты в sRGB, остальные — линейные
     return tex
 }
@@ -59,20 +59,22 @@ export const metallMaterial4 = new THREE.MeshStandardMaterial({
 })
 
 export const softMaterial = new THREE.MeshStandardMaterial({ 
-    map: loadTexture('/img/rough-fabric_albedo.png', true), // Базовое изображение текстуры
-    aoMap: loadTexture('./img/rough-fabric_ao.png'), // Карта теней
-    roughnessMap: loadTexture('./img/rough-fabric_roughness.png'), // Карта шероховатостей
-    metalnessMap: loadTexture('./img/rough-fabric_metallic.png'), // Металл или диэлектрик
-    normalMap: loadTexture('./img/rough-fabric_normal-ogl.png') // Карта нормалей
+    map: loadTexture('/img/rough-fabric_albedo.png', true, .009), // Базовое изображение текстуры
+    aoMap: loadTexture('./img/rough-fabric_ao.png', false, .009), // Карта теней
+    roughnessMap: loadTexture('./img/rough-fabric_roughness.png', false, .009), // Карта шероховатостей
+    // metalnessMap: loadTexture('./img/rough-fabric_metallic.png', false, .009), // Металл или диэлектрик
+    normalMap: loadTexture('./img/rough-fabric_normal-ogl.png', false, .009), // Карта нормалей
+    roughness: 1.25
 })
+
 export const softMaterial2 = new THREE.MeshStandardMaterial({ 
-    map: loadTexture('/img/grey-upholstery_albedo.png', true), // Базовое изображение текстуры
-    aoMap: loadTexture('./img/grey-upholstery_ao.png'), // Карта теней
-    roughnessMap: loadTexture('./img/grey-upholstery_roughness.png'), // Карта шероховатостей
-    metalnessMap: loadTexture('./img/grey-upholstery_metallic.png'), // Металл или диэлектрик
-    normalMap: loadTexture('./img/grey-upholstery_normal-ogl.png') // Карта нормалей
+    map: loadTexture('/img/grey-upholstery_albedo.png', true, .015), // Базовое изображение текстуры
+    aoMap: loadTexture('./img/grey-upholstery_ao.png', false, .015), // Карта теней
+    roughnessMap: loadTexture('./img/grey-upholstery_roughness.png', false, .015), // Карта шероховатостей
+    metalnessMap: loadTexture('./img/grey-upholstery_metallic.png', false, .015), // Металл или диэлектрик
+    normalMap: loadTexture('./img/grey-upholstery_normal-ogl.png', false, .015) // Карта нормалей
 })
-softMaterial2.normalScale.set(.1, .1) // Уменьшение значений неправильной карты нормалей
+softMaterial2.normalScale.set(.2, .2) // Уменьшение значений неправильной карты нормалей
 
 export const softMaterial3 = new THREE.MeshStandardMaterial({ 
     map: loadTexture('/img/Poliigon_FabricUpholsteryDrapery_8446_BaseColor.jpg', true),
@@ -87,10 +89,12 @@ export const softMaterial4 = new THREE.MeshStandardMaterial({
     map: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_BaseColor.jpg', true),
     aoMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_AmbientOcclusion.jpg'), 
     roughnessMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Roughness.jpg'),
-    metalnessMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Metallic.jpg'), 
-    normalMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Normal.png')
+    normalMap: loadTexture('./img/FabricUpholsterySolid/Poliigon_FabricUpholsterySolid_9286_Normal.png'),
+    roughness: 1.2,
+    color: 'rgb(194, 194, 194)', // Приглушаем светлую ткань: color умножается на map
+
 })
-softMaterial4.normalScale.set(.2, .2)
+softMaterial4.normalScale.set(.6, .6)
 
 export const softMaterial5 = new THREE.MeshStandardMaterial({ 
     map: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_BaseColor.jpg', true),
@@ -105,9 +109,9 @@ export const softMaterial6 = new THREE.MeshStandardMaterial({
     map: loadTexture('./img/FabricPlainRedChenille001_COL_2K.jpg', true),
     roughnessMap: loadTexture('./img/FabricPlainRedChenille001_ROUGHNESS_2K.jpg'), // Инвертированная GLOSS
     normalMap: loadTexture('./img/FabricPlainRedChenille001_NRM_2K.png'),
-    roughness: 1 // Шероховатость берётся из карты (0,39–0,65), число на неё умножается
+    roughness: 1.5
 })
-softMaterial6.normalScale.set(.2, .2)
+softMaterial6.normalScale.set(.3, .3)
 
 export const softMaterial7 = new THREE.MeshStandardMaterial({ 
     map: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_COL_2K.png', true, .02),
@@ -115,27 +119,38 @@ export const softMaterial7 = new THREE.MeshStandardMaterial({
     roughnessMap: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_ROUGHNESS_2K.jpg', false, .02), // Инвертированная GLOSS. Масштаб как у map
     // metalnessMap: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_REFL_2K.png'), 
     normalMap: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_NRM_2K.png'),
-    roughness: 1 // Шероховатость берётся из карты (0,44–0,66), число на неё умножается
+    roughness: 1.5 // Шероховатость берётся из карты (0,44–0,66), число на неё умножается
 })
 
 softMaterial7.normalScale.set(.2, .2)
 
+export const softMaterial8 = new THREE.MeshStandardMaterial({ 
+    map: loadTexture('./img/FabricUpholsterySolid_9302/FabricUpholsterySolid_9302_BaseColor.jpg', true),
+    aoMap: loadTexture('./img/FabricUpholsterySolid_9302/FabricUpholsterySolid_9302_AmbientOcclusion.jpg'), 
+    roughnessMap: loadTexture('./img/FabricUpholsterySolid_9302/FabricUpholsterySolid_9302_Roughness.jpg'),
+    metalnessMap: loadTexture('./img/FabricUpholsterySolid_9302/FabricUpholsterySolid_9302_Metallic.jpg'), 
+    normalMap: loadTexture('./img/FabricUpholsterySolid_9302/FabricUpholsterySolid_9302_Normal.png'),
+    color: 'rgb(202, 206, 221)', // Сдвигаем ткань в синий: бежевая нитка в карте светлее и перевешивает издалека
+    roughness: 1.1
+})
+softMaterial8.normalScale.set(.8, .8)
+
 // МАТЕРИАЛЫ ШАТРОВ
 
-export const roofMaterial = new THREE.MeshPhysicalMaterial({ // Такой объект, так как у него есть sheen
-    normalMap: loadTexture('./img/FabricNylonBallistic/FabricNylonBallistic_Normal.png', false, 4), // Плетение — единственная нужная карта
-    color: 'rgb(203, 203, 204)', // Цвет ткани целиком из color без карты BaseColor
+export const roofMaterial = new THREE.MeshPhysicalMaterial({ // Physical, так как у него есть sheen
+    // normalMap: loadTexture('./img/FabricNylonBallistic/FabricNylonBallistic_Normal.png', false, 30), // Плетение — единственная нужная карта
+    color: 'rgb(201, 201, 201)', // Цвет ткани целиком из color без карты BaseColor
     roughness: .7, // Матовый оксфорд с пропиткой
-    specularIntensity: .5, // Сила обычного блика. У ткани слабее, чем у пластика
+    specularIntensity: .6, // Сила обычного блика. У ткани слабее, чем у пластика
     transparent: true,
-    opacity: .99,
+    opacity: .95,
     side: THREE.DoubleSide,
-    sheen: .8, // Отдельный слой блеска поверх материала
-    sheenRoughness: .6, // Ширина отлива
-    sheenColor: 'rgb(180, 180, 180)' // Цвет отлива
+    sheen: .4, // Отдельный слой блеска поверх материала
+    sheenRoughness: .5, // Ширина отлива
+    sheenColor: 'rgb(206, 206, 206)' // Цвет отлива
 })
 
-roofMaterial.normalScale.set(1, 1)
+roofMaterial.normalScale.set(.5, .5)
 
 // Другие цвета той же ткани: клон делит с roofMaterial текстуру и шейдер, отличаются цвет и отлив
 const tentColor = (color, sheen) => {
@@ -148,15 +163,15 @@ const tentColor = (color, sheen) => {
 // id кнопки в index.html → ткань. Новый цвет — одна строка здесь, свечение, липучки и кнопка подхватят его сами
 export const tentFabricsById = {
     'tent-white':   roofMaterial,
-    'tent-blue':    tentColor('rgb(46, 64, 96)', .1),    // Василек
-    'tent-blue-2':  tentColor('rgb(32, 43, 62)', .1),    // Синий
-    'tent-black':   tentColor('rgb(35, 35, 35)', .1),    // Черный
-    'tent-grey-2':  tentColor('rgb(65, 65, 65)', .3),    // Серый
-    'tent-grey':    tentColor('rgb(134, 134, 134)', .3), // Светло-серый
-    'tent-green':   tentColor('rgb(65, 88, 47)', .3),    // Яблоко
-    'tent-green-2': tentColor('rgb(37, 56, 31)', .1),    // Зеленый
-    'tent-red':     tentColor('rgb(99, 35, 35)', .1),    // Красный
-    'tent-brown':   tentColor('rgb(71, 45, 19)', .1)     // Коричневый
+    'tent-blue':    tentColor('rgb(46, 64, 96)', .1),    // Васильковая
+    'tent-blue-2':  tentColor('rgb(32, 46, 72)', .1),    // Синяя
+    'tent-black':   tentColor('rgb(35, 35, 35)', .1),    // Черная
+    'tent-grey-2':  tentColor('rgb(54, 53, 53)', .3),    // Серая
+    'tent-grey':    tentColor('rgb(88, 88, 88)', .1), // Светло-серая
+    'tent-green':   tentColor('rgb(59, 78, 44)', .3),    // Яблочная
+    'tent-green-2': tentColor('rgb(37, 56, 31)', .1),    // Зеленая
+    'tent-red':     tentColor('rgb(99, 35, 35)', .1),    // Красная
+    'tent-brown':   tentColor('rgb(58, 36, 13)', .1)     // Коричневая
 }
 
 // Свечение ткани изнутри, когда в шатре горят лампы
@@ -180,12 +195,11 @@ export const setFabricGlow = (on) => {
     })
 }
 
-
 // Каркас шатра: алюминиевый профиль без текстур
 export const frameMaterial = new THREE.MeshPhysicalMaterial({
     color: 'rgb(211, 211, 211)', // Цвет отражения алюминия: светлый, а не средне-серый
     metalness: 1, // Чистый металл
-    roughness: .4, // Анодированный профиль: блик размытый, но заметный
+    roughness: .3, // Анодированный профиль: блик размытый, но заметный
     anisotropy: .9, // Вытянутый блик вдоль профиля
     // envMapIntensity: .7, // Отражения окружения сильнее, чем у ткани
     anisotropyRotation: Math.PI / 2 // Чтоб блик шел вдоль профиля
@@ -194,10 +208,10 @@ export const frameMaterial = new THREE.MeshPhysicalMaterial({
 
 // Окна шатра: прозрачный ПВХ. Без текстур — гладкий плёночный материал
 export const windowMaterial = new THREE.MeshStandardMaterial({
-    color: 'rgb(235, 240, 242)', // Чуть холодный оттенок плёнки
+    color: 'rgb(234, 236, 237)', // Чуть холодный оттенок плёнки
     transparent: true,
-    opacity: .75, // Сквозь окно видно, но плёнку заметно
-    roughness: .9, // Глянцевая — даёт блики от dirLight
+    opacity: .65, // Сквозь окно видно, но плёнку заметно
+    roughness: 1, // Глянцевая — даёт блики от dirLight
     metalness: 0,
     side: THREE.DoubleSide, // Видно и снаружи, и изнутри
     depthWrite: false // Не перекрывает по глубине то, что за окном
@@ -213,7 +227,7 @@ export const zipperMaterial = new THREE.MeshStandardMaterial({
 // Коннекторы: светлый пластик
 export const connectorMaterial = new THREE.MeshStandardMaterial({
     color: 'rgb(248, 248, 248)',
-    roughness: .5,
+    roughness: 1,
     metalness: 0
 })
 
@@ -246,4 +260,5 @@ const darkenBackSide = (shader) => {
         #endif`
     )
 }
+
 ;[...tentFabrics, ...velcroOf.values()].forEach(material => material.onBeforeCompile = darkenBackSide)

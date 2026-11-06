@@ -4,7 +4,6 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { metallMaterial, metallMaterial2, softMaterial, roofMaterial, frameMaterial, windowMaterial, zipperMaterial, connectorMaterial, velcroOf } from './textures.js'
 
 export const state = { metall: metallMaterial2, soft: softMaterial } // Задаем стейт материалов по дефолту
-export const sofa = new THREE.Group() // Все модели кресел (М1–М3) лежат в одной группе, чтобы при выборе М4, они убирались разом
 
 const loader = new GLTFLoader()
 loader.setMeshoptDecoder(MeshoptDecoder) // Метод для сжатой геометрии
@@ -42,6 +41,46 @@ export const t3TopsC4 = ['Node10', 'Node9']
 export const setT2Tops = (show, hide) => setParts(t2Parts, show, hide) 
 export const setT3Tops = (show, hide) => setParts(t3Parts, show, hide)
 
+// М1–М4 (одна сборка) Клик по модели выбирает, какие узлы видны
+// Имён в модели нет, сортировка по номерам узлов. 
+
+const mParts = {} // Разложенная сборка М
+const m2Parts = {} // Сложенная сборка M_2
+const m3Parts = {} // Разобранная сборка M_3
+
+// Постоянные узлы: Сидушки, пластины, передняя рама.
+const M_BASE = ['Node13', 'Node3', 'Node7', 'Node5', 'Node6']
+
+// Узлы Node1–16 одинаковы во всех трёх сборках
+const M_SETS = {
+    'М1': [...M_BASE, 'Node2', 'Node1', 'Node12', 'Node11'],
+    'М2': [...M_BASE, 'Node2', 'Node1', 'Node8', 'Node11', 'Node4'],
+    'М3': [...M_BASE, 'Node2', 'Node1', 'Node8', 'Node9', 'Node4', 'Node10'],
+    'М4': [...M_BASE, 'Node16', 'Node14', 'Node15']
+}
+
+// Крепеж (Node17–26) есть только в файлах M_2 и M_3, и номера в них разные.
+// Весь крепеж виден всегда, кроме крепежа на трубах, которые есть только у одной из рам:
+// Node2 — верхняя труба высокой рамы М1–М3, Node16 — верхняя труба низкой рамы М4
+const M2_CAPS_OF = { Node2: ['Node21', 'Node26'], Node16: ['Node18', 'Node22'] }
+const M3_CAPS_OF = { Node2: ['Node25', 'Node26'], Node16: ['Node23', 'Node24'] }
+
+const showMParts = (parts, visible, capsOf = {}) => Object.values(parts).forEach(node => {
+    const frame = Object.keys(capsOf).find(frame => capsOf[frame].includes(node.name))
+    if (frame) node.visible = visible.includes(frame) // Крепеж виден вместе со своей рамой
+    else node.visible = visible.includes(node.name) || isCap(node)
+})
+
+// Показывает узлы выбранной М сразу во всех сборках, остальные прячет. Состав не зависит от того, какая М была до этого
+export const setM = (name) => { // Включает узлы из набора и прячет остальные.
+    const visible = M_SETS[name] ?? M_SETS['М1'] // У комплектов 4.1 и 5.2 пока нет своих моделей — показываем М1
+    showMParts(mParts, visible)
+    showMParts(m2Parts, visible, M2_CAPS_OF)
+    showMParts(m3Parts, visible, M3_CAPS_OF)
+}
+
+const mSoftParts = new Set(['Node1', 'Node4', 'Node5', 'Node6', 'Node10']) // Подушки S1, S2, S3
+
 // СМЕННЫЕ МАТЕРИАЛЫ ДЛЯ РАЗНЫХ УСЛОВ СБОРКИ
 
 // Вытаскиваем массив узлов подушек из модели. Остальным просто присвоем другой материал
@@ -60,19 +99,12 @@ const a74SoftParts = new Set([
 // ЗАГРУЗКА МОДЕЛЕЙ
 
 const FURNITURE = {
-    mr:  { url: './models/compressed/MR.glb', pos: [-.351, 0, .4] },
-    mr2:  { url: './models/compressed/MR2.glb', pos: [-.351, 0, .4] },
-    ml:  { url: './models/compressed/ML.glb', pos: [.376, 0, .4] },
-    ml2:  { url: './models/compressed/ML2.glb', pos: [.376, 0, .4] },
-    tb:  { url: './models/compressed/TB.glb', pos: [.35, 0, .375], rot: [0, 270, 0] },
-    mf:  { url: './models/compressed/MF.glb', pos: [-.35, 0, -.275], rot: [0, 90, 0] },
-    mg:  { url: './models/compressed/MG.glb', pos: [-.35, .285, -.275], rot: [180, 0, 0] },
-    mg2:  { url: './models/compressed/MG.glb', pos: [-.35, .285, .05], rot: [180, 0, 0] },
-    s1Left: { url: './models/compressed/S1.glb', pos: [-.365, .29, .387], rot: [0, 0, 0], soft: true },
-    s1Right: { url: './models/compressed/S1.glb', pos: [0, .290, .387], rot: [0, 0, 0], soft: true },
-    s2: { url: './models/compressed/S2.glb', pos: [-.365, .375, -.28], rot: [90, 0, 0], soft: true },
-    s3: { url: './models/compressed/S3.glb', pos: [-.365, .375, -.19], rot: [0, 180, 90], soft: true },
-    s4: { url: './models/compressed/S3.glb', pos: [.272, .375, -.19], rot: [0, 180, 90], soft: true },
+    // Сборка М в файле сдвинута и повёрнута: pos и rot ставят её туда же, где стояли отдельные модели
+    m: { url: './models/compressed/M.glb', pos: [.889, 0, 3.297], rot: [0, 90, 0], softParts: mSoftParts, onMesh: (n) => { mParts[n.name] = n } },
+    // Сложенная М: стопка смещена в файле, pos ставит её в центр стола
+    m2: { url: './models/compressed/M_2.glb', pos: [.746, 0, 3.297], rot: [0, 90, 0], softParts: mSoftParts, caps: true, onMesh: (n) => { m2Parts[n.name] = n } },
+    // Разобранная М: центр в файле совпадает с M, поэтому pos тот же
+    m3: { url: './models/compressed/M_3.glb', pos: [.889, 0, 3.297], rot: [0, 90, 0], softParts: mSoftParts, caps: true, onMesh: (n) => { m3Parts[n.name] = n } },
 
     t2:  { url: './models/compressed/T2_Assembly.glb', pos: [.89, .15, 1.54], rot: [0, 90, 0], onMesh: (n) => { t2Parts[n.name] = n } },
     t3:  { url: './models/compressed/T3_Assembly.glb', pos: [.89, 0, 3.3], rot: [0, 90, 0], onMesh: (n) => { t3Parts[n.name] = n } },
@@ -116,18 +148,13 @@ const loadModel = ({ url, pos, rot = [0, 180, 0], scale = .01, soft = false, sof
         })
     })
 
-// Какие модели лежат в группе sofa
-const inSofa = ['mr2', 'ml2', 'tb', 'mf', 'mg', 'mg2', 's1Left', 's1Right', 's2']
-
-// Собирает всю мебель разом и возвращает объект { mr, ml, t2, … }
+// Собирает всю мебель разом и возвращает объект { m, t2, … }
 
 export const loadFurniture = async () => {
     const models = {}
     await Promise.all(
         Object.entries(FURNITURE).map(async ([key, config]) => { models[key] = await loadModel(config) })
     )
-    inSofa.forEach(key => sofa.add(models[key]))
-
     // Альтернативные детали по умолчанию скрыты
     setT2Tops(t2TopsM4, t2TopsC1)
     setT3Tops(t3TopsC3, t3TopsC4)
@@ -154,6 +181,74 @@ const setupTentMesh = (mesh) => {
 
 // Название кнопки размера → модель. Остальные размеры добавим, когда появятся модели
 const TENTS = {
+
+    '3,0x3,0': {
+        url: './models/compressed/tent_3x3.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, // Модель уже в метрах
+        parts: { 
+            Frame: frameMaterial, 
+            Roof: roofMaterial, 
+            Wall_Left: roofMaterial, 
+            Wall_Right: roofMaterial, 
+            Wall_Back: roofMaterial, 
+            Wall_Front: roofMaterial,
+            Frame_Connectors: connectorMaterial, 
+            Window_Left: windowMaterial, 
+            Window_Right: windowMaterial, 
+            Zippers_Front: zipperMaterial,
+            Velcro_Left: velcroOf.get(roofMaterial),
+            Velcro_Right: velcroOf.get(roofMaterial),
+            Velcro_Back: velcroOf.get(roofMaterial),
+            Velcro_Front: velcroOf.get(roofMaterial)
+        },
+        onMesh: setupTentMesh
+    },
+
+    '3,0x4,5': {
+        url: './models/compressed/tent_3x45.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, // Модель уже в метрах
+        parts: { 
+            Frame: frameMaterial, 
+            Roof: roofMaterial, 
+            Wall_Left: roofMaterial, 
+            Wall_Right: roofMaterial, 
+            Wall_Back: roofMaterial, 
+            Wall_Front: roofMaterial,
+            Frame_Connectors: connectorMaterial, 
+            Window_Left: windowMaterial, 
+            Window_Right: windowMaterial, 
+            Zippers_Front: zipperMaterial,
+            Velcro_Left: velcroOf.get(roofMaterial),
+            Velcro_Right: velcroOf.get(roofMaterial),
+            Velcro_Back: velcroOf.get(roofMaterial),
+            Velcro_Front: velcroOf.get(roofMaterial)
+        },
+        onMesh: setupTentMesh
+    },
+
+    '3,0x6,0': {
+        url: './models/compressed/tent_3x6.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, // Модель уже в метрах
+        parts: { 
+            Frame: frameMaterial, 
+            Roof: roofMaterial, 
+            Wall_Left: roofMaterial, 
+            Wall_Right: roofMaterial, 
+            Wall_Back_Left: roofMaterial,
+            Wall_Back_Right: roofMaterial, 
+            Wall_Front_Left: roofMaterial,
+            Wall_Front_Right: roofMaterial,
+            Frame_Connectors: connectorMaterial, 
+            Window_Left: windowMaterial, 
+            Window_Right: windowMaterial, 
+            Zippers_Front: zipperMaterial,
+            Velcro_Left: velcroOf.get(roofMaterial),
+            Velcro_Right: velcroOf.get(roofMaterial),
+            Velcro_Back_Left: velcroOf.get(roofMaterial),
+            Velcro_Back_Right: velcroOf.get(roofMaterial),
+            Velcro_Front_Left: velcroOf.get(roofMaterial),
+            Velcro_Front_Right: velcroOf.get(roofMaterial)
+        },
+        onMesh: setupTentMesh
+    },
+
     '4,0x4,0': {
         url: './models/compressed/tent_4x4.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, // Модель уже в метрах
         parts: { 
@@ -171,7 +266,53 @@ const TENTS = {
             Velcro_Right: velcroOf.get(roofMaterial),
             Velcro_Back: velcroOf.get(roofMaterial),
             Velcro_Front: velcroOf.get(roofMaterial)
- },
+        },
+        onMesh: setupTentMesh
+    },
+
+    '4,0x6,0': {
+        url: './models/compressed/tent_4x6.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1,
+        parts: { 
+            Frame: frameMaterial, 
+            Roof: roofMaterial, 
+            Wall_Left: roofMaterial, 
+            Wall_Right: roofMaterial, 
+            Wall_Back: roofMaterial, 
+            Wall_Front: roofMaterial,
+            Frame_Connectors: connectorMaterial, 
+            Window_Left: windowMaterial, 
+            Window_Right: windowMaterial, 
+            Zippers_Front: zipperMaterial,
+            Velcro_Left: velcroOf.get(roofMaterial),
+            Velcro_Right: velcroOf.get(roofMaterial),
+            Velcro_Back: velcroOf.get(roofMaterial),
+            Velcro_Front: velcroOf.get(roofMaterial)
+        },
+        onMesh: setupTentMesh
+    },
+
+    '4,0x8,0': {
+        url: './models/compressed/tent_4x8.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1,
+        parts: { 
+            Frame: frameMaterial, 
+            Roof: roofMaterial, 
+            Wall_Left: roofMaterial, 
+            Wall_Right: roofMaterial, 
+            Wall_Back_Left: roofMaterial,
+            Wall_Back_Right: roofMaterial, 
+            Wall_Front_Left: roofMaterial,
+            Wall_Front_Right: roofMaterial,
+            Frame_Connectors: connectorMaterial, 
+            Window_Left: windowMaterial, 
+            Window_Right: windowMaterial, 
+            Zippers_Front: zipperMaterial,
+            Velcro_Left: velcroOf.get(roofMaterial),
+            Velcro_Right: velcroOf.get(roofMaterial),
+            Velcro_Back_Left: velcroOf.get(roofMaterial),
+            Velcro_Back_Right: velcroOf.get(roofMaterial),
+            Velcro_Front_Left: velcroOf.get(roofMaterial),
+            Velcro_Front_Right: velcroOf.get(roofMaterial)
+        },
         onMesh: setupTentMesh
     }
 }

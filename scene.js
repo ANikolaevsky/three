@@ -24,7 +24,7 @@ scene.add(gridHelper)
 // СВЕТ
 
 export const dirLight = new THREE.DirectionalLight('rgb(251, 249, 240)', config.lighting.directionalIntensity)
-dirLight.position.set(1, 6, 1)
+dirLight.position.set(...config.lighting.dirLightPosition) // ... раскладывает массив внутри dirLightPosition в три аргумента.
 dirLight.castShadow = true // Отбрасывание тени от этого источника
 dirLight.shadow.mapSize = new THREE.Vector2(config.shadows.resolution, config.shadows.resolution) 
 dirLight.shadow.normalBias = config.shadows.normalBias // Улучшение нормалей от теней
@@ -51,47 +51,29 @@ export const setShadowArea = (area) => {
 }
 setShadowArea(config.shadows.area)
 
-// Второй направленный свет для шатров: подсвечивает сторону, куда не достаёт dirLight. Без тени. В сцену его добавляет tents.enter()
-export const dirLight2 = new THREE.DirectionalLight('rgb(250, 248, 238)', config.lighting.directionalIntensityTents2)
-dirLight2.position.set(-3, 2, -2)
+// Второй направленный свет: подсвечивает сторону, куда не достаёт dirLight. Без тени. В сцене всегда, яркость задаёт каждый раздел в enter()
+export const dirLight2 = new THREE.DirectionalLight('rgb(250, 248, 238)', config.lighting.directionalIntensity2)
+dirLight2.position.set(...config.lighting.dirLight2Position)
+scene.add(dirLight2)
 
 export const dirLightHelper2 = new THREE.DirectionalLightHelper(dirLight2, 2, 'red')
 scene.add(dirLightHelper2)
 
-export const pointLight = new THREE.PointLight('rgb(238, 238, 236)', 10, 10)
-pointLight.position.set(2, 1, 2)
-// scene.add(pointLight)
+// Точечный свет ради бликов на металле мебели: у направленного света на плоских гранях бликов нет. Шатры его убирают
+export const pointLight = new THREE.PointLight('rgb(225, 225, 225)', 5, 100)
+pointLight.position.set(...config.lighting.pointLightPosition)
+scene.add(pointLight)
 
 const pointLightHelper = new THREE.PointLightHelper(pointLight, .1)
 scene.add(pointLightHelper)
 
-export const pointLight2 = new THREE.PointLight('rgb(225, 225, 225)', 15, 100)
-pointLight2.position.set(-1.5, .5, -1.5) // Совпадает с pointLight2Default ниже
-scene.add(pointLight2)
-
-const pointLightHelper2 = new THREE.PointLightHelper(pointLight2, .1)
-scene.add(pointLightHelper2)
-
-export const pointLight3 = new THREE.PointLight('rgb(225, 225, 225)', 5, 100)
-pointLight3.position.set(-2.8, .5, 1)
-
-const pointLightHelper3 = new THREE.PointLightHelper(pointLight3, .1)
-scene.add(pointLightHelper3)
-
-export const pointLight4 = new THREE.PointLight('rgb(225, 225, 225)', 10, 100)
-pointLight4.position.set(2.8, .5, -2.8)
-
-const pointLightHelper4 = new THREE.PointLightHelper(pointLight4, .1)
-scene.add(pointLightHelper4)
-
-// Позиции pointLight2 для комплекта 7.3 
-export const pointLight2Default = new THREE.Vector3(-1.5, .5, -1.5)
-export const pointLight2Far = new THREE.Vector3(-2.8, .8, -2.6)
-export const pointLight2Tents = new THREE.Vector3(3, 1, 3)
+// Позиции pointLight: обычная и для разложенного комплекта 7.3
+export const pointLightDefault = new THREE.Vector3(...config.lighting.pointLightPosition)
+export const pointLightFar = new THREE.Vector3(...config.lighting.pointLightPositionFar)
 
 // Позиции dirLight по разделам
-export const dirLightDefault = new THREE.Vector3(1, 6, 1) // Совпадает с dirLight.position выше
-export const dirLightTents = new THREE.Vector3(3, 6, 3)
+export const dirLightDefault = new THREE.Vector3(...config.lighting.dirLightPosition) 
+export const dirLightTents = new THREE.Vector3(...config.lighting.dirLightPositionTents) // строка 94
 
 // Переставляет dirLight. Светит он всегда в центр сцены, меняется только позиция источника
 export const moveDirLight = (position) => {
@@ -101,7 +83,7 @@ export const moveDirLight = (position) => {
     shadowHelper.update()
 }
 
-// Плавный переход pointLight2 на новую позицию (та же кривая, что у камеры)
+// Плавный переход pointLight на новую позицию (та же кривая, что у камеры)
 const lightTween = {
     active: false,
     duration: 1, // мс, как у камеры, чтобы двигались вместе (изменен)
@@ -110,8 +92,8 @@ const lightTween = {
     to: new THREE.Vector3()
 }
 
-export const movePointLight2 = (position) => {
-    lightTween.from.copy(pointLight2.position)
+export const movePointLight = (position) => {
+    lightTween.from.copy(pointLight.position)
     lightTween.to.copy(position)
     lightTween.startTime = performance.now()
     lightTween.active = true
@@ -121,7 +103,7 @@ const updateLightTween = () => {
     if (!lightTween.active) return
     const t = Math.min((performance.now() - lightTween.startTime) / lightTween.duration, 1)
     const eased = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2 // easeInOutCubic: мягко трогается и мягко тормозит
-    pointLight2.position.lerpVectors(lightTween.from, lightTween.to, eased)
+    pointLight.position.lerpVectors(lightTween.from, lightTween.to, eased)
     if (t === 1) lightTween.active = false
 }
 
@@ -327,10 +309,7 @@ window.addEventListener('resize', () => { // Вешаем обработку н�
 if (!devMode) scene.remove(
     dirLightHelper,
     dirLightHelper2,
-    pointLightHelper, 
-    pointLightHelper2,
-    pointLightHelper3, 
-    pointLightHelper4, 
+    pointLightHelper,
     axisHelper, 
     gridHelper, 
     shadowHelper
