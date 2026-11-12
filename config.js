@@ -22,7 +22,7 @@ export const config = {
         environmentIntensity: .6, // Интенсивность окружения. Не освещения!
         environmentIntensityTents: .5, // Окружение в разделе шатров
 
-        dirLightPosition: [1, 6, 1], // Позиция dirLight в мебели
+        dirLightPosition: [1, 4, 1], // Позиция dirLight в мебели
         dirLightPositionTents: [3, 6, 3], // Позиция dirLight в шатрах
         dirLight2Position: [-5, 2, -4], // dirLight2 с противоположной от dirLight стороны, в обоих разделах
         pointLightPosition: [-1.5, .5, -1.5], // Точечный свет для бликов на металле мебели

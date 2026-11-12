@@ -118,7 +118,7 @@ export const softMaterial7 = new THREE.MeshStandardMaterial({
     // aoMap: loadTexture('./img/FabricUpholsteryDrapery/Poliigon_FabricUpholsteryDrapery_8447_AmbientOcclusion.jpg'), 
     roughnessMap: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_ROUGHNESS_2K.jpg', false, .02), // Инвертированная GLOSS. Масштаб как у map
     // metalnessMap: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_REFL_2K.png'), 
-    normalMap: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_NRM_2K.png'),
+    normalMap: loadTexture('./img/FabricPlainBrownChenille005/FabricPlainBrownChenille005_NRM_2K.png', false, .02),
     roughness: 1.5 // Шероховатость берётся из карты (0,44–0,66), число на неё умножается
 })
 
@@ -134,6 +134,27 @@ export const softMaterial8 = new THREE.MeshStandardMaterial({
     roughness: 1.1
 })
 softMaterial8.normalScale.set(.8, .8)
+
+export const fastenerMaterial = new THREE.MeshStandardMaterial({
+    map: loadTexture('./img/SteelBrushedElongated/SteelBrushedElongated_COL.jpg', true),
+    roughnessMap: loadTexture('./img/SteelBrushedElongated/SteelBrushedElongated_ROUGHNESS.jpg'), 
+    metalnessMap: loadTexture('./img/SteelBrushedElongated/SteelBrushedElongated_METALNESS.jpg'), 
+    normalMap: loadTexture('./img/SteelBrushedElongated/SteelBrushedElongated_NRM.jpg'), 
+    metalness: 1,
+    roughness: 0
+})
+
+// СТРОЧКА НА КРЕСЛЕ К1-К2
+
+const furnitureFabrics = [softMaterial, softMaterial2, softMaterial3, softMaterial4, softMaterial5, softMaterial6, softMaterial7, softMaterial8]
+
+// new Map(пары) делает из пар словарь, и не нужно перебирать весь массив
+export const stitchOf = new Map(furnitureFabrics.map(material => { 
+    const stitch = material.clone() // Клон материала
+    stitch.color.multiplyScalar(.1)
+    return [material, stitch]
+}))
+
 
 // МАТЕРИАЛЫ ШАТРОВ
 
@@ -232,7 +253,7 @@ export const connectorMaterial = new THREE.MeshStandardMaterial({
 })
 
 // ЛИПУЧКА. Текстуры и шейдер у клона общие с тканью, отличаются только цвет и свечение
-const VELCRO_SHADE = .8 // Насколько липучка будеттемнее ткани
+const VELCRO_SHADE = .8 // Насколько липучка будет темнее ткани
 export const velcroOf = new Map(tentFabrics.map(material => { 
     // Объект Map это объект-словарь, он харнит пару материал-липучка. Материал здесь является отдельным объектом.
     const velcro = material.clone()

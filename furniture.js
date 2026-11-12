@@ -1,9 +1,8 @@
 import { showSpecs } from './specs.js'
 import { bindGroup } from './buttons.js'
 import { metallMaterial, metallMaterial2, metallMaterial3, metallMaterial4,
-    softMaterial, softMaterial2, softMaterial3, softMaterial4, softMaterial5, softMaterial6, softMaterial7, softMaterial8} from './textures.js'
-import { loadFurniture, setM, state, setT2Tops, setT3Tops, t2TopsM4, t2TopsC1, 
-    t3TopsC3, t3TopsC4 } from './models.js'
+    softMaterial, softMaterial2, softMaterial3, softMaterial4, softMaterial5, softMaterial6, softMaterial7, softMaterial8, stitchOf} from './textures.js'
+import { loadFurniture, setM, setD, state, setT2Tops, setT3Tops, setK } from './models.js'
 import { config } from './config.js'
 import { scene, turntable, dirLight, dirLight2, setShadowArea, movePointLight,
     pointLightDefault, pointLightFar, setCameraHome, cameraHomeDefault, cameraHomeFar,
@@ -11,8 +10,38 @@ import { scene, turntable, dirLight, dirLight2, setShadowArea, movePointLight,
 
 // РАЗДЕЛ «МОДУЛЬНАЯ МЕБЕЛЬ»: модели, кнопки и переключение модулей
 
+// Серия → id блоков с кнопками, которые в ней видны. Остальные блоки .left прячутся
+const SERIES = {
+    'Мягкая': ['chairs', 'sofas', 'tables', 'tables2', 'complects'],
+    'Компактная': ['chairs2', 'tables', 'tables2'],
+    'Бескаркасная': ['chairs3', 'tables', 'tables2']
+}
+
+const seriesButtons = document.querySelectorAll('#series li:not(.label)')
+const moduleBlocks = document.querySelectorAll('#furniture .left .buttons:not(#series)')
+
+const setSeries = (name) => {
+    moduleBlocks.forEach(block => block.style.display = SERIES[name].includes(block.id) ? '' : 'none')
+}
+
+seriesButtons.forEach(li => {
+    li.addEventListener('click', () => {
+        seriesButtons.forEach(other => other.className = 'button')
+        li.className = 'active'
+
+        const name = li.textContent.trim()
+        setSeries(name)
+
+        // Ставим первую модель серии, чтобы на сцене не осталась модель из скрытых кнопок
+        const first = document.querySelector(`#${SERIES[name][0]} li:not(.label)`)
+        first?.click()
+    })
+})
+
+
 const models = await loadFurniture() // Код раздела ниже работает с уже загруженными моделями
-const { m, m2, m3, t2, t3, t4, t5, a73, a74 } = models
+// Деструктуризация объекта. Получается куча переменных с моделями типа const m = models.m и тд
+const { m, m2, m3, d, d2, d3, t2, t3, t4, t5, a73, a74, k } = models 
 
 //  ОБРАБОТКА СОБЫТИЙ
 
@@ -20,7 +49,7 @@ const { m, m2, m3, t2, t3, t4, t5, a73, a74 } = models
 
 // Модели могут быть не в сцене, поэтому обходим их отдельно. Скрытые узлы М traverse тоже обходит
 const replaceMaterial = (from, to) => {
-    const objects = [scene, m, m2, m3, t2, t3, t4, t5, a73, a74]
+    const objects = [scene, m, m2, m3, d, d2, d3, t2, t3, t4, t5, a73, a74, k]
     objects.forEach(object => {
         object?.traverse((node) => {
             if (node.isMesh && node.material === from && !node.userData.fixedMaterial) node.material = to
@@ -39,6 +68,7 @@ const setMetallMaterial = (to) => {
 // Функция смены текущего материала ткани на выбранный
 const setSoftMaterial = (to) => {
     replaceMaterial(state.soft, to)
+    replaceMaterial(stitchOf.get(state.soft), stitchOf.get(to)) // Для строчки ткани в К
     state.soft = to
 }
 
@@ -78,26 +108,32 @@ const setView = (next) => {
     decomposeLabel.textContent = view === 'decomposed' ? 'Собрать' : 'Разобрать'
 }
 
-// Сборка М в каждом виде. Видимые узлы во всех трёх уже выставил setM
-const mViews = { assembled: m, folded: m2, decomposed: m3 }
-const isMOnScene = () => Object.values(mViews).some(model => model && model.parent === turntable)
+// Сборки М и Д в каждом виде. Видимые узлы во всех трёх уже выставили setM и setD
+const assemblies = [
+    { assembled: m, folded: m2, decomposed: m3 },
+    { assembled: d, folded: d2, decomposed: d3 }
+]
+// Сборка, которая сейчас на сцене в любом из видов, или undefined
+const assemblyOnScene = () => assemblies.find(views => Object.values(views).some(model => model && model.parent === turntable))
 
-// Ставит М в нужный вид, повторный клик по той же кнопке возвращает обычный. Камера, свет и тени у М одни во всех видах
-const toggleMView = (next) => {
+// Ставит сборку в нужный вид, повторный клик по той же кнопке возвращает обычный. Камера, свет и тени одни во всех видах
+const toggleView = (views, next) => {
     const to = view === next ? 'assembled' : next
-    if (!mViews[to]) return // Модель не загрузилась
-    turntable.remove(mViews[view])
-    turntable.add(mViews[to])
+    if (!views[to]) return // Модель не загрузилась
+    turntable.remove(views[view])
+    turntable.add(views[to])
     setView(to)
 }
 
 // Обработчик «Разобрать»
 decompose.addEventListener('click', () => { 
-    if (isMOnScene()) toggleMView('decomposed') // Разбирается пока только М
+    const views = assemblyOnScene()
+    if (views) toggleView(views, 'decomposed') // Разбираются пока только М и Д
 })
 
 assembly.addEventListener('click', () => {
-    if (isMOnScene()) return toggleMView('folded')
+    const views = assemblyOnScene()
+    if (views) return toggleView(views, 'folded')
 
     // Иначе кнопка работает, только когда на сцене комплект 7.3 в любом из вариантов
     const isComplect = a73 && a74 && (a73.parent === turntable || a74.parent === turntable)
@@ -128,7 +164,7 @@ const modulesWithoutTextile = ['С1', 'С2', 'С3', 'С4', 'С5', 'С6'] // До
 
 // Кресла и Столы — одна общая группа: на сцене всегда одна модель, 
 // поэтому активна только одна кнопка из обеих, делаем общий querySelector
-const moduleButtons = document.querySelectorAll('#chairs li:not(.label), #tables li:not(.label), #tables2 li:not(.label), #complects li:not(.label)')
+const moduleButtons = document.querySelectorAll('#chairs li:not(.label), #sofas li:not(.label), #tables li:not(.label), #tables2 li:not(.label), #complects li:not(.label), #chairs2 li:not(.label)')
 
 moduleButtons.forEach(li => {
     li.addEventListener('click', () => { // Один обработчик для всех кнопок
@@ -143,7 +179,7 @@ moduleButtons.forEach(li => {
         textile.style.display = modulesWithoutTextile.includes(name) ? 'none' : '' 
 
         if (name === '7.3') setCameraHome(cameraHomeFar2) // Положение камеры в зависимости от модели
-        else if (name === 'С6' || name === 'С3') setCameraHome(cameraHomeFar)
+        else if (name === 'С6' || name === 'С3' || name.startsWith('Д')) setCameraHome(cameraHomeFar) // Длинные модели
         else setCameraHome(cameraHomeDefault)
 
         if (name === '7.3') setShadowArea(config.shadows.areaLarge) // Область тени для большой модели
@@ -156,6 +192,10 @@ moduleButtons.forEach(li => {
         if (a74) turntable.remove(a74)
         if (m2) turntable.remove(m2)
         if (m3) turntable.remove(m3)
+        if (d) turntable.remove(d)
+        if (d2) turntable.remove(d2)
+        if (d3) turntable.remove(d3)
+        if (k) turntable.remove(k)
         setView('assembled') // Новая модель всегда открывается в обычном виде
 
         if (name === '7.3') {
@@ -174,8 +214,7 @@ moduleButtons.forEach(li => {
             if (t4) turntable.remove(t4)
             if (t5) turntable.remove(t5)
             if (t2) turntable.add(t2)
-            if (name === 'С1') setT2Tops(t2TopsM4, t2TopsC1)
-            if (name === 'С2') setT2Tops(t2TopsC1, t2TopsM4)
+            setT2Tops(name)
             return
         }
 
@@ -185,8 +224,7 @@ moduleButtons.forEach(li => {
             if (t4) turntable.remove(t4)
             if (t5) turntable.remove(t5)
             if (t3) turntable.add(t3)
-            if (name === 'С5') setT3Tops(t3TopsC4, t3TopsC3)
-            if (name === 'С4') setT3Tops(t3TopsC3, t3TopsC4)
+            setT3Tops(name)
             return
         }
 
@@ -208,13 +246,41 @@ moduleButtons.forEach(li => {
             return
         }
 
+        // Д1–Д4: одна сборка Д, кнопка выбирает её видимые узлы
+        if (name.startsWith('Д')) {
+            if (m) turntable.remove(m)
+            if (k) turntable.remove(k)
+            if (t2) turntable.remove(t2)
+            if (t3) turntable.remove(t3)
+            if (t4) turntable.remove(t4)
+            if (t5) turntable.remove(t5)
+            if (d) turntable.add(d)
+            setD(name)
+            return
+        }
+
+        if (name.startsWith('К')) {
+            if (m) turntable.remove(m)
+            if (k) turntable.remove(k)
+            if (t2) turntable.remove(t2)
+            if (t3) turntable.remove(t3)
+            if (t4) turntable.remove(t4)
+            if (t5) turntable.remove(t5)
+            if (d) turntable.remove(d)
+            if (k) turntable.add(k)
+            setK(name)
+            return
+        }
+
         // М1–М4: одна сборка М, кнопка выбирает её видимые узлы
         if (t2) turntable.remove(t2)
         if (t3) turntable.remove(t3)
         if (t4) turntable.remove(t4)
         if (t5) turntable.remove(t5)
+        if (k) turntable.remove(k)
         if (m) turntable.add(m)
         setM(name)
+
     })
 })
 
@@ -230,18 +296,11 @@ export const furniture = {
         dirLight2.intensity = config.lighting.directionalIntensity2 // Шатры ставят ему свою яркость
         dirLight.intensity = config.lighting.directionalIntensity // Шатры ставят ему свою яркость
         scene.environmentIntensity = config.lighting.environmentIntensity // Шатры ставят своё окружение
+        setSeries('Мягкая')
         moduleButtons[1].click() // А внутри click по кнопке М2 и её обработчик
     },
     exit() { // При выходе из furniture, убираем всё, что было в сцене, чтобы не мешать другим разделам
-        if (m) turntable.remove(m)
-        if (m2) turntable.remove(m2)
-        if (m3) turntable.remove(m3)
-        if (t2) turntable.remove(t2)
-        if (t3) turntable.remove(t3)
-        if (t4) turntable.remove(t4)
-        if (t5) turntable.remove(t5)
-        if (a73) turntable.remove(a73)
-        if (a74) turntable.remove(a74)
+        Object.values(models).forEach(model => turntable.remove(model)) // Заменили уборку всех моделей на такое короткое условие
         setView('assembled')
         section.style.display = 'none' // Прячем разметку раздела
     }
