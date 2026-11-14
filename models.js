@@ -125,7 +125,7 @@ export const setD = (name) => {
     showParts(d3Parts, visible, D_FRAME_FASTENERS)
 }
 
-// Компактные кресла
+// КОМПАКТНАЯ СЕРИЯ
 
 const kParts = {} // Разложенная сборка K
 
@@ -142,6 +142,9 @@ const setupKMesh = (mesh) => {
     if (mesh.name === 'Stitching') mesh.material = stitchOf.get(state.soft) // Строчка — затемнённая текущая ткань, setSoftMaterial перекрашивает её вместе с тканью
     if (mesh.name === 'Fasteners') setFastenerMaterial(mesh) // Весь крепеж К одним мешем, isFastener по 1182 вершинам его не находит
 }
+
+// БЕСКАРКАСНАЯ СЕРИЯ
+
 
 // СМЕНА МАТЕРИАЛОВ ДЛЯ РАЗНЫХ УЗЛОВ СБОРКИ
 
@@ -172,12 +175,17 @@ const FURNITURE = {
     d2: { url: './models/compressed/D_2.glb', pos: [.670, 0, 3.236], rot: [0, 90, 0], softParts: D_SOFT_PARTS, fasteners: true, onMesh: (n) => { d2Parts[n.name] = n } },
     d3: { url: './models/compressed/D_3.glb', pos: [.889, 0, 3.247], rot: [0, 90, 0], softParts: D_SOFT_PARTS, fasteners: true, onMesh: (n) => { d3Parts[n.name] = n } },
 
-    t2:  { url: './models/compressed/T2_Assembly.glb', pos: [.89, .15, 1.54], rot: [0, 90, 0], onMesh: (n) => { t2Parts[n.name] = n } },
-    t3:  { url: './models/compressed/T3_Assembly.glb', pos: [.89, 0, 3.3], rot: [0, 90, 0], onMesh: (n) => { t3Parts[n.name] = n } },
-    t4:  { url: './models/compressed/T4_Assembly.glb', pos: [1.25, 0, 3.3], rot: [0, 90, 0] },
-    t5:  { url: './models/compressed/T5_Assembly.glb', pos: [1.25, .15, 1.54], rot: [0, 90, 0] },
+    b1: { url: './models/compressed/B_short_straight.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, soft: true }, // soft: true - вся модель из текущей ткани
+    b2: { url: './models/compressed/B_short_angled.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, soft: true },
+    b3: { url: './models/compressed/B_long_straight.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, soft: true },
+    b4: { url: './models/compressed/B_long_angled.glb', pos: [0, 0, 0], rot: [0, 0, 0], scale: 1, soft: true },
 
-    a73: { url: './models/compressed/7.3_Assembly.glb', pos: [1.7, 0, -.9], softParts: A73_SOFT_PARTS, fasteners: true },
+    t2:  { url: './models/compressed/T2_Assembly.glb', pos: [.89, .15, 1.488], rot: [0, 90, 0], onMesh: (n) => { t2Parts[n.name] = n } },
+    t3:  { url: './models/compressed/T3_Assembly.glb', pos: [.89, 0, 3.247], rot: [0, 90, 0], onMesh: (n) => { t3Parts[n.name] = n } },
+    t4:  { url: './models/compressed/T4_Assembly.glb', pos: [1.253, 0, 3.247], rot: [0, 90, 0] },
+    t5:  { url: './models/compressed/T5_Assembly.glb', pos: [1.255, .15, 1.488], rot: [0, 90, 0] },
+
+    a73: { url: './models/compressed/7.3_Assembly.glb', pos: [1.754, 0, -.856], softParts: A73_SOFT_PARTS, fasteners: true },
     a74: { url: './models/compressed/7.3_Disassembly.glb', pos: [-2.55, 0, .14], softParts: A74_SOFT_PARTS, fasteners: true },
 }
 

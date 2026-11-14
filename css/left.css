@@ -35,10 +35,10 @@
     }
 
     &.active {
-    background: var(--grey-1);
+    background: var(--grey-4);
     }
 
     &.active:active {
-    background: var(--grey-0);
+    background: var(--grey-4);
     }
 }
